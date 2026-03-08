@@ -1806,3 +1806,19 @@ function renderCmdResults(query) {
     let items = [];
     // Pages
     state.getAllPages().forEach(p => { if (!q || p.name.toLowerCase().includes(q)) items.push({ type: 'page
+});
+}
+
+// Initialize on page load
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => {
+        render();
+        applyDarkMode();
+    });
+} else {
+    render();
+    applyDarkMode();
+}
+</script>
+</body>
+</html>
