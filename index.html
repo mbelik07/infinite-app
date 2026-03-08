@@ -4,70 +4,1805 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta property="og:title" content="Infinite — Collaborative Workspace">
-    <meta property="og:description" content="A powerful collaborative workspace with Kanban boards, rich editing, AI features, and more.">
-    <meta property="og:image" content="https://cdn.simulationtheory.ai/gasset/?asset=img&prompt=modern purple collaborative workspace app logo infinite&w=64&h=64">
+    <meta property="og:description" content="A powerful collaborative workspace with Kanban boards, rich editing, AI Copilot, and more.">
     <meta property="og:type" content="website">
     <title>Infinite — Collaborative Workspace</title>
-    
-    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    
-    <!-- Font Awesome -->
-    <link href="/chat/cdn/all.min.css" rel="stylesheet">
-    <script src="/chat/cdn/all.min.js" crossorigin></script>
-    
-    <!-- Animations -->
-    <link href="/chat/cdn/animate.min.css" rel="stylesheet">
-    
-    <!-- GSAP & Sortable -->
     <script src="/chat/cdn/gsap.min.js"></script>
     <script src="/chat/cdn/Sortable.min.js"></script>
-    
-    <!-- Custom Styles -->
-    <link rel="stylesheet" href="css/variables.css">
-    <link rel="stylesheet" href="css/main.css">
-    <link rel="stylesheet" href="css/components.css">
-    
+    <script src="/chat/cdn/papaparse.min.js"></script>
+    <link href="/chat/cdn/all.min.css" rel="stylesheet">
+    <script src="/chat/cdn/all.min.js" crossorigin></script>
+    <link href="/chat/cdn/animate.min.css" rel="stylesheet">
     <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        lp: {
-                            purple: '#6264A7',
-                            blue: '#4F6BED',
-                            teal: '#0EA5E9',
-                            green: '#22C55E',
-                            red: '#EF4444',
-                            orange: '#F59E0B',
-                            pink: '#EC4899',
-                            bg: '#F5F5F5',
-                            sidebar: '#FFFFFF',
-                            card: '#FFFFFF',
-                            dark: '#1E1E1E',
-                            darkSidebar: '#252526',
-                            darkCard: '#2D2D2D',
-                            darkBg: '#1E1E1E',
-                            darkBorder: '#3E3E3E',
-                            darkText: '#CCCCCC'
-                        }
-                    }
-                }
-            }
-        }
+    tailwind.config={theme:{extend:{colors:{lp:{purple:'#6264A7',blue:'#4F6BED',teal:'#0EA5E9',green:'#22C55E',red:'#EF4444',orange:'#F59E0B',pink:'#EC4899',bg:'#F5F5F5',sidebar:'#FFFFFF',card:'#FFFFFF',dark:'#1E1E1E',darkSidebar:'#252526',darkCard:'#2D2D2D',darkBg:'#1E1E1E',darkBorder:'#3E3E3E',darkText:'#CCCCCC'}}}}}
     </script>
+    <style>
+        @font-face{font-family:'Font Awesome 6 Free';src:url('/chat/webfonts/fa-solid-900.woff2') format('woff2'),url('/chat/webfonts/fa-solid-900.ttf') format('truetype')}
+        @font-face{font-family:'Font Awesome 6 Free';src:url('/chat/webfonts/fa-regular-400.woff2') format('woff2'),url('/chat/webfonts/fa-regular-400.ttf') format('truetype')}
+        @font-face{font-family:'Font Awesome 6 Brands';src:url('/chat/webfonts/fa-brands-400.woff2') format('woff2'),url('/chat/webfonts/fa-brands-400.ttf') format('truetype')}
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{font-family:'Segoe UI',-apple-system,BlinkMacSystemFont,sans-serif;overflow:hidden;height:100vh;transition:background .3s,color .3s}
+        ::-webkit-scrollbar{width:5px;height:5px}
+        ::-webkit-scrollbar-track{background:transparent}
+        ::-webkit-scrollbar-thumb{background:#c1c1c1;border-radius:3px}
+        .dark ::-webkit-scrollbar-thumb{background:#555}
+        .sidebar-item{transition:all .15s}
+        .sidebar-item:hover{background:rgba(98,100,167,.08)}
+        .sidebar-item.active{background:rgba(98,100,167,.12);color:#6264A7;font-weight:600}
+        .dark .sidebar-item:hover{background:rgba(98,100,167,.15)}
+        .dark .sidebar-item.active{background:rgba(98,100,167,.25)}
+        .board-list{min-width:280px;max-width:280px}
+        .card-item{cursor:grab;transition:box-shadow .2s,transform .15s}
+        .card-item:hover{box-shadow:0 4px 12px rgba(0,0,0,.1);transform:translateY(-1px)}
+        .card-item:active{cursor:grabbing}
+        .sortable-ghost{opacity:.35;transform:rotate(2deg)}
+        .sortable-chosen{box-shadow:0 12px 30px rgba(0,0,0,.18)}
+        .block-editable:empty:before{content:attr(data-placeholder);color:#9ca3af}
+        .block-editable:focus{outline:none}
+        .modal-overlay{backdrop-filter:blur(6px)}
+        .fade-in{animation:fadeIn .25s ease}
+        @keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+        @keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+        .animate-pulse-slow{animation:pulse 2s ease-in-out infinite}
+        .slash-menu{max-height:320px;overflow-y:auto}
+        .slash-item:hover,.slash-item.active{background:rgba(98,100,167,.1)}
+        .dark .slash-item:hover,.dark .slash-item.active{background:rgba(98,100,167,.25)}
+        .cover-img{height:180px;object-fit:cover;width:100%;border-radius:12px 12px 0 0}
+        .priority-high{border-left:3px solid #ef4444}
+        .priority-medium{border-left:3px solid #f59e0b}
+        .priority-low{border-left:3px solid #22c55e}
+        .priority-none{border-left:3px solid transparent}
+        .toggle-content{max-height:0;overflow:hidden;transition:max-height .3s ease}
+        .toggle-content.open{max-height:2000px}
+        .toolbar-btn{transition:all .15s}
+        .toolbar-btn:hover{background:rgba(98,100,167,.12);color:#6264A7}
+        .toolbar-btn.active{background:rgba(98,100,167,.15);color:#6264A7}
+        .tag{font-size:11px;padding:2px 8px;border-radius:99px;font-weight:500}
+        .notification-dot{width:8px;height:8px;border-radius:50%;background:#ef4444;position:absolute;top:2px;right:2px}
+        .kbd{font-size:11px;padding:1px 5px;border-radius:4px;background:#f3f4f6;border:1px solid #e5e7eb;font-family:monospace;color:#6b7280}
+        .dark .kbd{background:#3e3e3e;border-color:#555;color:#aaa}
+        .checklist-item.done .cl-text{text-decoration:line-through;color:#9ca3af}
+        .ws-tree-item{transition:all .15s}
+        .ws-tree-item:hover{background:rgba(98,100,167,.06)}
+        .cover-gradient{background:linear-gradient(135deg,#6264A7 0%,#4F6BED 50%,#0EA5E9 100%)}
+        .cover-gradient-warm{background:linear-gradient(135deg,#F59E0B 0%,#EF4444 50%,#EC4899 100%)}
+        .cover-gradient-green{background:linear-gradient(135deg,#22C55E 0%,#0EA5E9 100%)}
+        .cover-gradient-dark{background:linear-gradient(135deg,#1E1E1E 0%,#6264A7 100%)}
+        .cover-gradient-sunset{background:linear-gradient(135deg,#F97316 0%,#EC4899 50%,#8B5CF6 100%)}
+        .callout{border-left:4px solid;padding:12px 16px;border-radius:0 8px 8px 0;margin:8px 0}
+        .callout-info{border-color:#0EA5E9;background:rgba(14,165,233,.08)}
+        .callout-warning{border-color:#F59E0B;background:rgba(245,158,11,.08)}
+        .callout-success{border-color:#22C55E;background:rgba(34,197,94,.08)}
+        .callout-error{border-color:#EF4444;background:rgba(239,68,68,.08)}
+        .dark .callout-info{background:rgba(14,165,233,.12)}
+        .dark .callout-warning{background:rgba(245,158,11,.12)}
+        .dark .callout-success{background:rgba(34,197,94,.12)}
+        .dark .callout-error{background:rgba(239,68,68,.12)}
+        .progress-bar{height:8px;border-radius:99px;background:#e5e7eb;overflow:hidden}
+        .progress-fill{height:100%;border-radius:99px;transition:width .5s ease}
+        .reaction-btn{padding:2px 8px;border-radius:99px;font-size:13px;cursor:pointer;transition:all .15s;border:1px solid transparent}
+        .reaction-btn:hover{border-color:#d1d5db;background:rgba(98,100,167,.06)}
+        .reaction-btn.active{border-color:#6264A7;background:rgba(98,100,167,.1)}
+        .version-item{transition:all .15s}
+        .version-item:hover{background:rgba(98,100,167,.06)}
+        .cmd-palette-item{transition:all .1s}
+        .cmd-palette-item:hover,.cmd-palette-item.active{background:rgba(98,100,167,.1)}
+        .board-filter-btn{transition:all .15s}
+        .board-filter-btn:hover,.board-filter-btn.active{background:rgba(98,100,167,.12);color:#6264A7}
+        .swimlane-header{background:rgba(98,100,167,.05);border-radius:8px;padding:8px 12px;margin-bottom:8px}
+        .wip-warning{background:rgba(239,68,68,.08);border:1px dashed #ef4444;border-radius:8px;padding:4px 8px;font-size:11px;color:#ef4444}
+        .card-cover{height:100px;border-radius:8px 8px 0 0;object-fit:cover;width:100%}
+        .activity-item{border-left:2px solid #e5e7eb;padding-left:12px;margin-left:8px}
+        .dark .activity-item{border-left-color:#3e3e3e}
+        .math-block{font-family:'Cambria Math','Times New Roman',serif;font-style:italic;background:rgba(98,100,167,.04);padding:8px 12px;border-radius:8px;text-align:center}
+        .mention-tag{color:#6264A7;background:rgba(98,100,167,.1);padding:1px 6px;border-radius:4px;font-weight:500;cursor:pointer}
+        .date-tag{color:#0EA5E9;background:rgba(14,165,233,.1);padding:1px 6px;border-radius:4px;cursor:pointer}
+        .embed-card{border:1px solid #e5e7eb;border-radius:8px;overflow:hidden;transition:box-shadow .2s}
+        .embed-card:hover{box-shadow:0 4px 12px rgba(0,0,0,.08)}
+        .dark .embed-card{border-color:#3e3e3e}
+        .code-block{font-family:'Cascadia Code','Fira Code',monospace;font-size:13px;background:#1e1e1e;color:#d4d4d4;padding:16px;border-radius:8px;overflow-x:auto;white-space:pre;line-height:1.5}
+        .quote-block{border-left:3px solid #6264A7;padding:8px 16px;color:#6b7280;font-style:italic;margin:8px 0}
+        .dark .quote-block{color:#999}
+        .divider-block{border:none;border-top:1px solid #e5e7eb;margin:16px 0}
+        .dark .divider-block{border-top-color:#3e3e3e}
+        .table-component{width:100%;border-collapse:collapse}
+        .table-component th,.table-component td{border:1px solid #e5e7eb;padding:8px 12px;text-align:left;font-size:13px}
+        .table-component th{background:#f9fafb;font-weight:600;font-size:12px;text-transform:uppercase;color:#6b7280}
+        .dark .table-component th{background:#2d2d2d;color:#999}
+        .dark .table-component th,.dark .table-component td{border-color:#3e3e3e}
+        .vote-btn{cursor:pointer;transition:all .15s;padding:2px 6px;border-radius:4px}
+        .vote-btn:hover{background:rgba(98,100,167,.1)}
+        .status-badge{font-size:11px;padding:2px 10px;border-radius:99px;font-weight:600}
+        .status-not-started{background:#f3f4f6;color:#6b7280}
+        .status-in-progress{background:rgba(14,165,233,.12);color:#0EA5E9}
+        .status-done{background:rgba(34,197,94,.12);color:#22C55E}
+        .status-blocked{background:rgba(239,68,68,.12);color:#EF4444}
+        .notif-panel{max-height:400px;overflow-y:auto}
+        .shortcut-row{display:flex;justify-content:space-between;align-items:center;padding:6px 0}
+        .ai-glow{box-shadow:0 0 20px rgba(98,100,167,.3);border:1px solid rgba(98,100,167,.3)}
+        .ai-typing{display:inline-block;width:6px;height:6px;border-radius:50%;background:#6264A7;animation:pulse .8s ease-in-out infinite}
+        .page-locked{pointer-events:none;opacity:.7}
+        .page-locked::after{content:'🔒';position:absolute;top:8px;right:8px;font-size:18px}
+    </style>
 </head>
 <body class="bg-lp-bg text-gray-800 h-screen flex">
-    <div id="app" class="flex w-full h-full"></div>
-    
-    <!-- Scripts (in order) -->
-    <script src="js/state.js"></script>
-    <script src="js/storage.js"></script>
-    <script src="js/ui.js"></script>
-    <script src="js/editor.js"></script>
-    <script src="js/board.js"></script>
-    <script src="js/modals.js"></script>
-    <script src="js/keyboard.js"></script>
-    <script src="js/app.js"></script>
-</body>
-</html>
+
+<!-- ==================== COMMAND PALETTE (Ctrl+K) ==================== -->
+<div id="cmdPalette" class="fixed inset-0 z-[100] hidden modal-overlay bg-black/30 flex items-start justify-center pt-[15vh]">
+    <div class="bg-white dark:bg-lp-darkCard rounded-xl shadow-2xl w-full max-w-lg overflow-hidden border border-gray-200 dark:border-lp-darkBorder fade-in">
+        <div class="flex items-center gap-3 px-4 py-3 border-b border-gray-100 dark:border-lp-darkBorder">
+            <i class="fas fa-search text-gray-400 text-sm"></i>
+            <input id="cmdInput" type="text" placeholder="Type a command or search..." class="flex-1 bg-transparent outline-none text-sm dark:text-lp-darkText" autocomplete="off">
+            <span class="kbd">Esc</span>
+        </div>
+        <div id="cmdResults" class="max-h-80 overflow-y-auto p-2"></div>
+    </div>
+</div>
+
+<!-- ==================== NOTIFICATION PANEL ==================== -->
+<div id="notifPanel" class="fixed top-0 right-0 w-80 h-full bg-white dark:bg-lp-darkCard shadow-2xl z-50 hidden border-l border-gray-200 dark:border-lp-darkBorder">
+    <div class="flex items-center justify-between p-4 border-b border-gray-100 dark:border-lp-darkBorder">
+        <h3 class="font-bold text-sm">Notifications</h3>
+        <div class="flex items-center gap-2">
+            <button onclick="clearNotifications()" class="text-xs text-gray-400 hover:text-lp-purple">Clear all</button>
+            <button onclick="toggleNotifPanel()" class="w-7 h-7 flex items-center justify-center rounded-md hover:bg-gray-100 dark:hover:bg-lp-darkBorder"><i class="fas fa-times text-xs text-gray-400"></i></button>
+        </div>
+    </div>
+    <div id="notifList" class="notif-panel p-3 space-y-2"></div>
+</div>
+
+<!-- ==================== MODAL OVERLAY ==================== -->
+<div id="modalOverlay" class="fixed inset-0 z-50 hidden modal-overlay bg-black/40 flex items-center justify-center p-4">
+    <div id="modalContent" class="bg-white dark:bg-lp-darkCard rounded-xl shadow-2xl max-h-[90vh] overflow-auto w-full max-w-lg border border-gray-200 dark:border-lp-darkBorder fade-in"></div>
+</div>
+
+<!-- ==================== KEYBOARD SHORTCUTS MODAL ==================== -->
+<div id="shortcutsModal" class="fixed inset-0 z-50 hidden modal-overlay bg-black/40 flex items-center justify-center p-4">
+    <div class="bg-white dark:bg-lp-darkCard rounded-xl shadow-2xl w-full max-w-md p-6 border border-gray-200 dark:border-lp-darkBorder fade-in">
+        <div class="flex items-center justify-between mb-4">
+            <h2 class="font-bold text-lg dark:text-white">Keyboard Shortcuts</h2>
+            <button onclick="document.getElementById('shortcutsModal').classList.add('hidden')" class="w-7 h-7 flex items-center justify-center rounded-md hover:bg-gray-100 dark:hover:bg-lp-darkBorder"><i class="fas fa-times text-xs text-gray-400"></i></button>
+        </div>
+        <div class="space-y-1 text-sm">
+            <div class="shortcut-row"><span class="text-gray-600 dark:text-gray-400">Command Palette</span><span class="kbd">Ctrl + K</span></div>
+            <div class="shortcut-row"><span class="text-gray-600 dark:text-gray-400">New Page</span><span class="kbd">Ctrl + N</span></div>
+            <div class="shortcut-row"><span class="text-gray-600 dark:text-gray-400">Toggle Sidebar</span><span class="kbd">Ctrl + \\</span></div>
+            <div class="shortcut-row"><span class="text-gray-600 dark:text-gray-400">Toggle Dark Mode</span><span class="kbd">Ctrl + D</span></div>
+            <div class="shortcut-row"><span class="text-gray-600 dark:text-gray-400">Bold</span><span class="kbd">Ctrl + B</span></div>
+            <div class="shortcut-row"><span class="text-gray-600 dark:text-gray-400">Italic</span><span class="kbd">Ctrl + I</span></div>
+            <div class="shortcut-row"><span class="text-gray-600 dark:text-gray-400">Underline</span><span class="kbd">Ctrl + U</span></div>
+            <div class="shortcut-row"><span class="text-gray-600 dark:text-gray-400">Strikethrough</span><span class="kbd">Ctrl + Shift + S</span></div>
+            <div class="shortcut-row"><span class="text-gray-600 dark:text-gray-400">Slash Commands</span><span class="kbd">/</span></div>
+            <div class="shortcut-row"><span class="text-gray-600 dark:text-gray-400">Mention</span><span class="kbd">@</span></div>
+            <div class="shortcut-row"><span class="text-gray-600 dark:text-gray-400">Undo</span><span class="kbd">Ctrl + Z</span></div>
+            <div class="shortcut-row"><span class="text-gray-600 dark:text-gray-400">Redo</span><span class="kbd">Ctrl + Shift + Z</span></div>
+            <div class="shortcut-row"><span class="text-gray-600 dark:text-gray-400">Save</span><span class="kbd">Ctrl + S</span></div>
+            <div class="shortcut-row"><span class="text-gray-600 dark:text-gray-400">Shortcuts Help</span><span class="kbd">Ctrl + /</span></div>
+        </div>
+    </div>
+</div>
+
+<!-- ==================== MAIN APP ==================== -->
+<div id="app" class="flex w-full h-full">
+
+    <!-- SIDEBAR COLLAPSED -->
+    <div id="sidebarCollapsed" class="hidden flex-col items-center w-12 bg-white dark:bg-lp-darkSidebar border-r border-gray-200 dark:border-lp-darkBorder py-3 gap-2 flex-shrink-0 z-30">
+        <button id="expandSidebar" class="w-9 h-9 bg-lp-purple rounded-lg flex items-center justify-center mb-2 hover:bg-indigo-600 transition-colors" title="Expand Sidebar"><i class="fas fa-infinity text-white text-xs"></i></button>
+        <button class="sidebar-mini-btn w-9 h-9 flex items-center justify-center rounded-lg hover:bg-gray-100 dark:hover:bg-lp-darkBorder text-gray-500" data-view="home" title="Home"><i class="fas fa-home text-sm"></i></button>
+        <button class="sidebar-mini-btn w-9 h-9 flex items-center justify-center rounded-lg hover:bg-gray-100 dark:hover:bg-lp-darkBorder text-gray-500" data-view="recent" title="Recent"><i class="fas fa-clock text-sm"></i></button>
+        <button class="sidebar-mini-btn w-9 h-9 flex items-center justify-center rounded-lg hover:bg-gray-100 dark:hover:bg-lp-darkBorder text-gray-500" data-view="favorites" title="Favorites"><i class="fas fa-star text-sm"></i></button>
+        <button id="createBtnSmall" class="w-9 h-9 flex items-center justify-center rounded-lg bg-lp-purple/10 text-lp-purple hover:bg-lp-purple/20 transition-colors" title="Create"><i class="fas fa-plus text-sm"></i></button>
+    </div>
+
+    <!-- SIDEBAR FULL -->
+    <aside id="sidebar" class="w-64 bg-white dark:bg-lp-darkSidebar border-r border-gray-200 dark:border-lp-darkBorder flex flex-col h-full transition-all duration-300 flex-shrink-0 z-30">
+        <!-- Header -->
+        <div class="p-4 flex items-center justify-between border-b border-gray-100 dark:border-lp-darkBorder">
+            <div class="flex items-center gap-2">
+                <div class="w-8 h-8 bg-lp-purple rounded-lg flex items-center justify-center"><i class="fas fa-infinity text-white text-sm"></i></div>
+                <span class="font-semibold text-lg dark:text-white">Infinite</span>
+            </div>
+            <button id="toggleSidebar" class="w-7 h-7 flex items-center justify-center rounded-md hover:bg-gray-100 dark:hover:bg-lp-darkBorder text-gray-400"><i class="fas fa-chevron-left text-xs"></i></button>
+        </div>
+        <!-- Create Button -->
+        <div class="p-3">
+            <button id="createBtn" class="w-full bg-lp-purple hover:bg-indigo-600 text-white rounded-lg py-2.5 px-4 flex items-center justify-center gap-2 font-medium transition-colors shadow-sm"><i class="fas fa-plus text-sm"></i><span>Create</span></button>
+        </div>
+        <!-- Navigation -->
+        <nav class="flex-1 overflow-y-auto px-2 pb-2">
+            <div class="mb-1">
+                <div class="sidebar-item active flex items-center gap-3 px-3 py-2 rounded-lg cursor-pointer" data-view="home"><i class="fas fa-home text-sm w-5 text-center text-gray-400"></i><span class="text-sm">Home</span></div>
+                <div class="sidebar-item flex items-center gap-3 px-3 py-2 rounded-lg cursor-pointer" data-view="recent"><i class="fas fa-clock text-sm w-5 text-center text-gray-400"></i><span class="text-sm">Recent</span></div>
+                <div class="sidebar-item flex items-center gap-3 px-3 py-2 rounded-lg cursor-pointer" data-view="favorites"><i class="fas fa-star text-sm w-5 text-center text-gray-400"></i><span class="text-sm">Favorites</span></div>
+                <div class="sidebar-item flex items-center gap-3 px-3 py-2 rounded-lg cursor-pointer" data-view="activity"><i class="fas fa-bolt text-sm w-5 text-center text-gray-400"></i><span class="text-sm">Activity</span></div>
+                <div class="sidebar-item flex items-center gap-3 px-3 py-2 rounded-lg cursor-pointer" data-view="trash"><i class="fas fa-trash text-sm w-5 text-center text-gray-400"></i><span class="text-sm">Trash</span></div>
+            </div>
+            <div class="mt-3 mb-1 px-3 flex items-center justify-between">
+                <span class="text-[11px] font-semibold text-gray-400 uppercase tracking-wider">Workspaces</span>
+                <button id="addWorkspaceBtn" class="w-5 h-5 flex items-center justify-center rounded hover:bg-gray-100 dark:hover:bg-lp-darkBorder text-gray-400"><i class="fas fa-plus text-[10px]"></i></button>
+            </div>
+            <div id="workspaceTree" class="space-y-0.5"></div>
+        </nav>
+        <!-- Footer -->
+        <div class="p-3 border-t border-gray-100 dark:border-lp-darkBorder space-y-1">
+            <div class="sidebar-item flex items-center gap-3 px-3 py-2 rounded-lg cursor-pointer" onclick="toggleDarkMode()"><i class="fas fa-moon text-sm w-5 text-center text-gray-400" id="darkModeIcon"></i><span class="text-sm" id="darkModeLabel">Dark Mode</span></div>
+            <div class="sidebar-item flex items-center gap-3 px-3 py-2 rounded-lg cursor-pointer" onclick="document.getElementById('shortcutsModal').classList.remove('hidden')"><i class="fas fa-keyboard text-sm w-5 text-center text-gray-400"></i><span class="text-sm">Shortcuts</span></div>
+            <div class="sidebar-item flex items-center gap-3 px-3 py-2 rounded-lg cursor-pointer" id="exportBtn"><i class="fas fa-download text-sm w-5 text-center text-gray-400"></i><span class="text-sm">Export Data</span></div>
+            <div class="sidebar-item flex items-center gap-3 px-3 py-2 rounded-lg cursor-pointer" onclick="importData()"><i class="fas fa-upload text-sm w-5 text-center text-gray-400"></i><span class="text-sm">Import Data</span></div>
+        </div>
+    </aside>
+
+    <!-- MAIN AREA -->
+    <main class="flex-1 flex flex-col h-full overflow-hidden">
+        <!-- TOP BAR -->
+        <header class="h-12 bg-white dark:bg-lp-darkSidebar border-b border-gray-200 dark:border-lp-darkBorder flex items-center px-4 gap-3 flex-shrink-0">
+            <div id="breadcrumb" class="flex items-center gap-1.5 text-sm text-gray-500 dark:text-gray-400 flex-1 min-w-0">
+                <span class="truncate">Home</span>
+            </div>
+            <div class="flex items-center gap-1">
+                <div class="relative">
+                    <input id="searchInput" type="text" placeholder="Search... (Ctrl+K)" class="w-52 bg-gray-100 dark:bg-lp-darkBg rounded-lg px-3 py-1.5 text-sm outline-none focus:ring-2 focus:ring-lp-purple/30 dark:text-lp-darkText transition-all" autocomplete="off">
+                    <i class="fas fa-search absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs"></i>
+                </div>
+                <button class="relative w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-100 dark:hover:bg-lp-darkBorder text-gray-500" onclick="toggleNotifPanel()" title="Notifications">
+                    <i class="fas fa-bell text-sm"></i>
+                    <div id="notifDot" class="notification-dot hidden"></div>
+                </button>
+                <button class="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-100 dark:hover:bg-lp-darkBorder text-gray-500" onclick="showSettingsModal()" title="Settings"><i class="fas fa-cog text-sm"></i></button>
+                <div class="w-8 h-8 bg-lp-purple rounded-full flex items-center justify-center text-white text-xs font-bold cursor-pointer" onclick="showProfileModal()" title="Profile">M</div>
+            </div>
+        </header>
+        <!-- CONTENT -->
+        <div id="mainContent" class="flex-1 overflow-auto"></div>
+    </main>
+</div>
+
+<!-- SLASH MENU (floating) -->
+<div id="slashMenu" class="fixed z-50 hidden bg-white dark:bg-lp-darkCard rounded-xl shadow-2xl border border-gray-200 dark:border-lp-darkBorder w-72 slash-menu fade-in"></div>
+
+<!-- FORMATTING TOOLBAR (floating) -->
+<div id="formatToolbar" class="fixed z-50 hidden bg-white dark:bg-lp-darkCard rounded-lg shadow-xl border border-gray-200 dark:border-lp-darkBorder px-1 py-1 flex items-center gap-0.5 fade-in">
+    <button class="toolbar-btn w-7 h-7 flex items-center justify-center rounded text-sm" onclick="execFmt('bold')" title="Bold (Ctrl+B)"><i class="fas fa-bold text-xs"></i></button>
+    <button class="toolbar-btn w-7 h-7 flex items-center justify-center rounded text-sm" onclick="execFmt('italic')" title="Italic (Ctrl+I)"><i class="fas fa-italic text-xs"></i></button>
+    <button class="toolbar-btn w-7 h-7 flex items-center justify-center rounded text-sm" onclick="execFmt('underline')" title="Underline (Ctrl+U)"><i class="fas fa-underline text-xs"></i></button>
+    <button class="toolbar-btn w-7 h-7 flex items-center justify-center rounded text-sm" onclick="execFmt('strikeThrough')" title="Strikethrough"><i class="fas fa-strikethrough text-xs"></i></button>
+    <div class="w-px h-5 bg-gray-200 dark:bg-lp-darkBorder mx-0.5"></div>
+    <button class="toolbar-btn w-7 h-7 flex items-center justify-center rounded text-sm" onclick="execFmt('insertUnorderedList')" title="Bullet List"><i class="fas fa-list-ul text-xs"></i></button>
+    <button class="toolbar-btn w-7 h-7 flex items-center justify-center rounded text-sm" onclick="execFmt('insertOrderedList')" title="Numbered List"><i class="fas fa-list-ol text-xs"></i></button>
+    <div class="w-px h-5 bg-gray-200 dark:bg-lp-darkBorder mx-0.5"></div>
+    <button class="toolbar-btn w-7 h-7 flex items-center justify-center rounded text-sm" onclick="insertLink()" title="Insert Link"><i class="fas fa-link text-xs"></i></button>
+    <button class="toolbar-btn w-7 h-7 flex items-center justify-center rounded text-sm" onclick="execFmt('formatBlock','blockquote')" title="Quote"><i class="fas fa-quote-right text-xs"></i></button>
+    <button class="toolbar-btn w-7 h-7 flex items-center justify-center rounded text-sm" onclick="insertCodeInline()" title="Code"><i class="fas fa-code text-xs"></i></button>
+    <div class="w-px h-5 bg-gray-200 dark:bg-lp-darkBorder mx-0.5"></div>
+    <input type="color" id="textColorPicker" class="w-6 h-6 rounded cursor-pointer border-0" value="#000000" onchange="document.execCommand('foreColor',false,this.value)" title="Text Color">
+</div>
+
+<input type="file" id="importFileInput" class="hidden" accept=".json">
+
+<script>
+// =====================================================================
+// INFINITE — FULL APPLICATION
+// =====================================================================
+
+const EMOJIS = ['📄','📋','📊','📌','🎯','🚀','💡','🔥','⭐','🎨','📝','🗂️','📦','🧩','🔧','💼','🌟','🏆','📈','🎉','🤖','🧠','💎','🌈','🎵','📸','🌍','🏠','❤️','✅'];
+const COVERS = ['cover-gradient','cover-gradient-warm','cover-gradient-green','cover-gradient-dark','cover-gradient-sunset'];
+const LABEL_COLORS = [{name:'Red',color:'#EF4444',bg:'rgba(239,68,68,.12)'},{name:'Orange',color:'#F59E0B',bg:'rgba(245,158,11,.12)'},{name:'Green',color:'#22C55E',bg:'rgba(34,197,94,.12)'},{name:'Blue',color:'#0EA5E9',bg:'rgba(14,165,233,.12)'},{name:'Purple',color:'#8B5CF6',bg:'rgba(139,92,246,.12)'},{name:'Pink',color:'#EC4899',bg:'rgba(236,72,153,.12)'}];
+const WS_COLORS = ['#6264A7','#4F6BED','#0EA5E9','#22C55E','#F59E0B','#EF4444','#EC4899','#8B5CF6','#F97316','#14B8A6'];
+const PRIORITIES = [{name:'None',value:'none',icon:''},{name:'High',value:'high',icon:'🔴'},{name:'Medium',value:'medium',icon:'🟡'},{name:'Low',value:'low',icon:'🟢'}];
+const STATUSES = [{name:'Not Started',value:'not_started',class:'status-not-started'},{name:'In Progress',value:'in_progress',class:'status-in-progress'},{name:'Done',value:'done',class:'status-done'},{name:'Blocked',value:'blocked',class:'status-blocked'}];
+
+const TEMPLATES = [
+    {name:'Blank Page',emoji:'📄',desc:'Start from scratch',blocks:[{type:'heading1',content:'Untitled'}]},
+    {name:'Meeting Notes',emoji:'📋',desc:'Agenda, attendees, action items',blocks:[{type:'heading1',content:'Meeting Notes'},{type:'heading2',content:'📅 Date'},{type:'paragraph',content:''},{type:'heading2',content:'👥 Attendees'},{type:'checklist',items:['Attendee 1','Attendee 2']},{type:'heading2',content:'📋 Agenda'},{type:'numberedList',items:['Topic 1','Topic 2','Topic 3']},{type:'heading2',content:'✅ Action Items'},{type:'taskList',items:[{text:'Action item 1',status:'not_started',assignee:'',due:''},{text:'Action item 2',status:'not_started',assignee:'',due:''}]},{type:'heading2',content:'📝 Notes'},{type:'paragraph',content:''}]},
+    {name:'Project Plan',emoji:'🚀',desc:'Goals, timeline, tasks',blocks:[{type:'heading1',content:'Project Plan'},{type:'callout',variant:'info',content:'Define your project scope and objectives here.'},{type:'heading2',content:'🎯 Objectives'},{type:'bulletList',items:['Objective 1','Objective 2']},{type:'heading2',content:'📅 Timeline'},{type:'progressTracker',label:'Overall Progress',value:0},{type:'heading2',content:'✅ Tasks'},{type:'taskList',items:[{text:'Task 1',status:'not_started',assignee:'',due:''},{text:'Task 2',status:'not_started',assignee:'',due:''}]},{type:'heading2',content:'📊 Status'},{type:'statusTracker',items:[{name:'Design',status:'not_started'},{name:'Development',status:'not_started'},{name:'Testing',status:'not_started'}]}]},
+    {name:'Brainstorm',emoji:'💡',desc:'Collect and organize ideas',blocks:[{type:'heading1',content:'Brainstorm'},{type:'callout',variant:'success',content:'No idea is a bad idea! Write freely.'},{type:'heading2',content:'💡 Ideas'},{type:'bulletList',items:['Idea 1','Idea 2','Idea 3']},{type:'heading2',content:'⭐ Top Picks'},{type:'votingTable',items:[{text:'Idea A',votes:0},{text:'Idea B',votes:0}]}]},
+    {name:'SWOT Analysis',emoji:'📊',desc:'Strengths, Weaknesses, Opportunities, Threats',blocks:[{type:'heading1',content:'SWOT Analysis'},{type:'heading2',content:'💪 Strengths'},{type:'bulletList',items:['Strength 1']},{type:'heading2',content:'⚠️ Weaknesses'},{type:'bulletList',items:['Weakness 1']},{type:'heading2',content:'🌟 Opportunities'},{type:'bulletList',items:['Opportunity 1']},{type:'heading2',content:'🚨 Threats'},{type:'bulletList',items:['Threat 1']}]},
+    {name:'Decision Matrix',emoji:'⚖️',desc:'Compare options systematically',blocks:[{type:'heading1',content:'Decision Matrix'},{type:'table',headers:['Option','Pros','Cons','Score'],rows:[['Option A','','',''],['Option B','','','']]}]},
+    {name:'Weekly Standup',emoji:'🗓️',desc:'Status updates for the team',blocks:[{type:'heading1',content:'Weekly Standup'},{type:'heading2',content:'✅ Done This Week'},{type:'checklist',items:['Completed item 1']},{type:'heading2',content:'🔄 In Progress'},{type:'checklist',items:['Working on...']},{type:'heading2',content:'🚧 Blockers'},{type:'callout',variant:'warning',content:'List any blockers here.'},{type:'heading2',content:'📅 Next Week'},{type:'checklist',items:['Plan for next week']}]},
+    {name:'Retrospective',emoji:'🔄',desc:'What went well, improve, action items',blocks:[{type:'heading1',content:'Retrospective'},{type:'heading2',content:'🎉 What Went Well'},{type:'bulletList',items:['']},{type:'heading2',content:'🔧 What to Improve'},{type:'bulletList',items:['']},{type:'heading2',content:'✅ Action Items'},{type:'taskList',items:[{text:'Action item',status:'not_started',assignee:'',due:''}]}]},
+    {name:'Project Brief',emoji:'📑',desc:'Overview, scope, deliverables',blocks:[{type:'heading1',content:'Project Brief'},{type:'heading2',content:'📋 Overview'},{type:'paragraph',content:''},{type:'heading2',content:'🎯 Scope'},{type:'paragraph',content:''},{type:'heading2',content:'📦 Deliverables'},{type:'checklist',items:['Deliverable 1','Deliverable 2']},{type:'heading2',content:'📅 Timeline'},{type:'paragraph',content:''}]},
+    {name:'Issue Tracker',emoji:'🐛',desc:'Track bugs and issues',blocks:[{type:'heading1',content:'Issue Tracker'},{type:'taskList',items:[{text:'Bug: Description',status:'not_started',assignee:'',due:'',priority:'high'},{text:'Feature: Description',status:'not_started',assignee:'',due:'',priority:'medium'}]}]},
+    {name:'Content Calendar',emoji:'📅',desc:'Plan and schedule content',blocks:[{type:'heading1',content:'Content Calendar'},{type:'table',headers:['Date','Topic','Status','Owner','Channel'],rows:[['','','Draft','',''],['','','Draft','','']]}]},
+    {name:'OKR Tracker',emoji:'🎯',desc:'Objectives & Key Results',blocks:[{type:'heading1',content:'OKR Tracker'},{type:'heading2',content:'Objective 1'},{type:'progressTracker',label:'Key Result 1',value:0},{type:'progressTracker',label:'Key Result 2',value:0},{type:'heading2',content:'Objective 2'},{type:'progressTracker',label:'Key Result 1',value:0}]}
+];
+
+const SLASH_COMMANDS = [
+    {name:'Heading 1',icon:'fa-heading',desc:'Large heading',cmd:'heading1'},
+    {name:'Heading 2',icon:'fa-heading',desc:'Medium heading',cmd:'heading2'},
+    {name:'Heading 3',icon:'fa-heading',desc:'Small heading',cmd:'heading3'},
+    {name:'Paragraph',icon:'fa-paragraph',desc:'Plain text block',cmd:'paragraph'},
+    {name:'Bulleted List',icon:'fa-list-ul',desc:'Unordered list',cmd:'bulletList'},
+    {name:'Numbered List',icon:'fa-list-ol',desc:'Ordered list',cmd:'numberedList'},
+    {name:'Checklist',icon:'fa-check-square',desc:'Interactive checkboxes',cmd:'checklist'},
+    {name:'Task List',icon:'fa-tasks',desc:'Assignable tasks with status',cmd:'taskList'},
+    {name:'Toggle',icon:'fa-caret-down',desc:'Collapsible section',cmd:'toggle'},
+    {name:'Table',icon:'fa-table',desc:'Insert a table',cmd:'table'},
+    {name:'Divider',icon:'fa-minus',desc:'Horizontal separator',cmd:'divider'},
+    {name:'Callout — Info',icon:'fa-info-circle',desc:'Information callout',cmd:'callout-info'},
+    {name:'Callout — Warning',icon:'fa-exclamation-triangle',desc:'Warning callout',cmd:'callout-warning'},
+    {name:'Callout — Success',icon:'fa-check-circle',desc:'Success callout',cmd:'callout-success'},
+    {name:'Callout — Error',icon:'fa-times-circle',desc:'Error callout',cmd:'callout-error'},
+    {name:'Quote',icon:'fa-quote-right',desc:'Block quote',cmd:'quote'},
+    {name:'Code Block',icon:'fa-code',desc:'Code snippet',cmd:'codeBlock'},
+    {name:'Image',icon:'fa-image',desc:'Embed an image',cmd:'image'},
+    {name:'Link Embed',icon:'fa-external-link-alt',desc:'Rich link preview',cmd:'linkEmbed'},
+    {name:'Math Equation',icon:'fa-square-root-alt',desc:'LaTeX math block',cmd:'math'},
+    {name:'Progress Tracker',icon:'fa-battery-half',desc:'Visual progress bar',cmd:'progressTracker'},
+    {name:'Voting Table',icon:'fa-thumbs-up',desc:'Items with upvote/downvote',cmd:'votingTable'},
+    {name:'Status Tracker',icon:'fa-traffic-light',desc:'Track items with status',cmd:'statusTracker'},
+    {name:'Emoji',icon:'fa-smile',desc:'Insert an emoji',cmd:'emoji'},
+    {name:'Date',icon:'fa-calendar-alt',desc:'Insert a date',cmd:'date'},
+    {name:'Board',icon:'fa-columns',desc:'Kanban board',cmd:'board'},
+    {name:'AI Draft',icon:'fa-robot',desc:'Generate content with AI',cmd:'aiDraft'},
+];
+
+// =====================================================================
+// STATE MANAGEMENT
+// =====================================================================
+class AppState {
+    constructor() {
+        this.currentView = 'home';
+        this.currentWorkspace = null;
+        this.currentPage = null;
+        this.sidebarCollapsed = false;
+        this.darkMode = false;
+        this.workspaces = [];
+        this.trash = [];
+        this.notifications = [];
+        this.activity = [];
+        this.profile = { name: 'Mirek', initials: 'M', avatar: '' };
+        this.load();
+    }
+    uid() { return Date.now().toString(36) + Math.random().toString(36).substr(2, 6); }
+    save() { try { localStorage.setItem('infinite_data', JSON.stringify({ workspaces: this.workspaces, trash: this.trash, notifications: this.notifications, activity: this.activity, profile: this.profile, darkMode: this.darkMode })); } catch(e) { console.error('Save error', e); } }
+    load() {
+        try {
+            const d = JSON.parse(localStorage.getItem('infinite_data'));
+            if (d) { this.workspaces = d.workspaces || []; this.trash = d.trash || []; this.notifications = d.notifications || []; this.activity = d.activity || []; this.profile = d.profile || this.profile; this.darkMode = d.darkMode || false; }
+        } catch(e) { console.error('Load error', e); }
+    }
+    getWorkspace(id) { return this.workspaces.find(w => w.id === id); }
+    getPage(wsId, pageId) { const ws = this.getWorkspace(wsId); return ws ? ws.pages.find(p => p.id === pageId) : null; }
+    getAllPages() {
+        const pages = [];
+        this.workspaces.forEach(ws => { ws.pages.forEach(p => { pages.push({ ...p, workspaceId: ws.id, workspaceName: ws.name, workspaceEmoji: ws.emoji }); }); });
+        return pages;
+    }
+    getRecentPages() { return this.getAllPages().sort((a, b) => (b.updatedAt || b.createdAt || 0) - (a.updatedAt || a.createdAt || 0)).slice(0, 20); }
+    getFavoritePages() { return this.getAllPages().filter(p => p.isFavorite); }
+    addNotification(text, icon = 'fa-bell') {
+        this.notifications.unshift({ id: this.uid(), text, icon, time: Date.now(), read: false });
+        if (this.notifications.length > 50) this.notifications = this.notifications.slice(0, 50);
+        this.save();
+        updateNotifDot();
+    }
+    addActivity(text, icon = 'fa-bolt') {
+        this.activity.unshift({ id: this.uid(), text, icon, time: Date.now() });
+        if (this.activity.length > 100) this.activity = this.activity.slice(0, 100);
+        this.save();
+    }
+    exportData() {
+        const blob = new Blob([JSON.stringify({ workspaces: this.workspaces, trash: this.trash, profile: this.profile }, null, 2)], { type: 'application/json' });
+        const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `infinite-backup-${new Date().toISOString().slice(0,10)}.json`; a.click();
+        this.addNotification('Data exported successfully', 'fa-download');
+    }
+    deletePage(wsId, pageId) {
+        const ws = this.getWorkspace(wsId);
+        if (!ws) return;
+        const idx = ws.pages.findIndex(p => p.id === pageId);
+        if (idx === -1) return;
+        const page = ws.pages.splice(idx, 1)[0];
+        page._wsId = wsId; page._wsName = ws.name;
+        this.trash.push(page);
+        this.addActivity(`Deleted page "${page.name}"`, 'fa-trash');
+        this.save();
+    }
+    restorePage(pageId) {
+        const idx = this.trash.findIndex(p => p.id === pageId);
+        if (idx === -1) return;
+        const page = this.trash.splice(idx, 1)[0];
+        const ws = this.getWorkspace(page._wsId);
+        if (ws) { delete page._wsId; delete page._wsName; ws.pages.push(page); }
+        this.addActivity(`Restored page "${page.name}"`, 'fa-undo');
+        this.save();
+    }
+    permanentDelete(pageId) { this.trash = this.trash.filter(p => p.id !== pageId); this.save(); }
+}
+
+const state = new AppState();
+
+// =====================================================================
+// DARK MODE
+// =====================================================================
+function applyDarkMode() {
+    if (state.darkMode) { document.documentElement.classList.add('dark'); document.body.classList.add('dark','bg-lp-darkBg','text-lp-darkText'); document.body.classList.remove('bg-lp-bg','text-gray-800'); }
+    else { document.documentElement.classList.remove('dark'); document.body.classList.remove('dark','bg-lp-darkBg','text-lp-darkText'); document.body.classList.add('bg-lp-bg','text-gray-800'); }
+    const icon = document.getElementById('darkModeIcon');
+    const label = document.getElementById('darkModeLabel');
+    if (icon) icon.className = state.darkMode ? 'fas fa-sun text-sm w-5 text-center text-yellow-400' : 'fas fa-moon text-sm w-5 text-center text-gray-400';
+    if (label) label.textContent = state.darkMode ? 'Light Mode' : 'Dark Mode';
+}
+function toggleDarkMode() { state.darkMode = !state.darkMode; state.save(); applyDarkMode(); }
+applyDarkMode();
+
+// =====================================================================
+// NOTIFICATIONS
+// =====================================================================
+function updateNotifDot() {
+    const dot = document.getElementById('notifDot');
+    if (dot) { const unread = state.notifications.filter(n => !n.read).length; dot.classList.toggle('hidden', unread === 0); }
+}
+function toggleNotifPanel() {
+    const panel = document.getElementById('notifPanel');
+    panel.classList.toggle('hidden');
+    if (!panel.classList.contains('hidden')) { renderNotifications(); state.notifications.forEach(n => n.read = true); state.save(); updateNotifDot(); }
+}
+function renderNotifications() {
+    const list = document.getElementById('notifList');
+    if (state.notifications.length === 0) { list.innerHTML = '<p class="text-center text-gray-400 text-sm py-8">No notifications yet</p>'; return; }
+    list.innerHTML = state.notifications.map(n => `<div class="flex items-start gap-3 p-2 rounded-lg hover:bg-gray-50 dark:hover:bg-lp-darkBorder ${n.read ? '' : 'bg-lp-purple/5'}"><i class="fas ${n.icon} text-xs text-lp-purple mt-1"></i><div class="flex-1"><p class="text-xs text-gray-700 dark:text-gray-300">${n.text}</p><p class="text-[10px] text-gray-400 mt-0.5">${timeAgo(n.time)}</p></div></div>`).join('');
+}
+function clearNotifications() { state.notifications = []; state.save(); renderNotifications(); updateNotifDot(); }
+updateNotifDot();
+
+// =====================================================================
+// FORMATTING
+// =====================================================================
+function execFmt(cmd, val) { document.execCommand(cmd, false, val || null); }
+function insertLink() { const url = prompt('Enter URL:'); if (url) document.execCommand('createLink', false, url); }
+function insertCodeInline() { const sel = window.getSelection(); if (sel.rangeCount) { const range = sel.getRangeAt(0); const code = document.createElement('code'); code.style.cssText = 'background:#f3f4f6;padding:1px 4px;border-radius:3px;font-family:monospace;font-size:13px'; range.surroundContents(code); } }
+
+document.addEventListener('mouseup', () => {
+    const sel = window.getSelection();
+    const toolbar = document.getElementById('formatToolbar');
+    if (sel && sel.toString().trim().length > 0 && sel.anchorNode) {
+        const editable = sel.anchorNode.parentElement?.closest?.('[contenteditable="true"]');
+        if (editable) {
+            const range = sel.getRangeAt(0);
+            const rect = range.getBoundingClientRect();
+            toolbar.style.top = (rect.top - 44) + 'px';
+            toolbar.style.left = (rect.left + rect.width / 2 - 150) + 'px';
+            toolbar.classList.remove('hidden');
+            return;
+        }
+    }
+    setTimeout(() => { if (!toolbar.matches(':hover')) toolbar.classList.add('hidden'); }, 200);
+});
+
+// =====================================================================
+// SLASH COMMANDS
+// =====================================================================
+let slashTarget = null;
+let slashFilter = '';
+function showSlashMenu(target, rect) {
+    slashTarget = target;
+    slashFilter = '';
+    const menu = document.getElementById('slashMenu');
+    menu.style.top = (rect.bottom + 4) + 'px';
+    menu.style.left = rect.left + 'px';
+    menu.classList.remove('hidden');
+    renderSlashMenu('');
+}
+function renderSlashMenu(filter) {
+    const menu = document.getElementById('slashMenu');
+    const items = SLASH_COMMANDS.filter(c => c.name.toLowerCase().includes(filter.toLowerCase()));
+    menu.innerHTML = `<div class="p-2 space-y-0.5">${items.length ? items.map((c, i) => `<div class="slash-item flex items-center gap-3 px-3 py-2 rounded-lg cursor-pointer ${i === 0 ? 'active' : ''}" data-cmd="${c.cmd}"><div class="w-8 h-8 bg-gray-100 dark:bg-lp-darkBorder rounded-lg flex items-center justify-center"><i class="fas ${c.icon} text-xs text-lp-purple"></i></div><div><div class="text-sm font-medium dark:text-white">${c.name}</div><div class="text-[11px] text-gray-400">${c.desc}</div></div></div>`).join('') : '<p class="text-sm text-gray-400 px-3 py-2">No commands found</p>'}</div>`;
+    menu.querySelectorAll('.slash-item').forEach(el => {
+        el.addEventListener('click', () => { executeSlashCommand(el.dataset.cmd); hideSlashMenu(); });
+    });
+}
+function hideSlashMenu() { document.getElementById('slashMenu').classList.add('hidden'); slashTarget = null; slashFilter = ''; }
+
+function executeSlashCommand(cmd) {
+    if (!state.currentPage || !state.currentWorkspace) return;
+    const page = state.getPage(state.currentWorkspace, state.currentPage);
+    if (!page || page.type !== 'document') return;
+    const newBlock = createBlockFromCommand(cmd);
+    if (newBlock) { page.blocks.push(newBlock); page.updatedAt = Date.now(); state.save(); renderPageEditor(page); }
+}
+
+function createBlockFromCommand(cmd) {
+    switch(cmd) {
+        case 'heading1': return { id: state.uid(), type: 'heading1', content: '' };
+        case 'heading2': return { id: state.uid(), type: 'heading2', content: '' };
+        case 'heading3': return { id: state.uid(), type: 'heading3', content: '' };
+        case 'paragraph': return { id: state.uid(), type: 'paragraph', content: '' };
+        case 'bulletList': return { id: state.uid(), type: 'bulletList', items: [''] };
+        case 'numberedList': return { id: state.uid(), type: 'numberedList', items: [''] };
+        case 'checklist': return { id: state.uid(), type: 'checklist', items: [{ text: '', done: false }] };
+        case 'taskList': return { id: state.uid(), type: 'taskList', items: [{ text: '', status: 'not_started', assignee: '', due: '', priority: 'none' }] };
+        case 'toggle': return { id: state.uid(), type: 'toggle', title: 'Toggle section', content: '', open: false };
+        case 'table': return { id: state.uid(), type: 'table', headers: ['Column 1', 'Column 2', 'Column 3'], rows: [['', '', ''], ['', '', '']] };
+        case 'divider': return { id: state.uid(), type: 'divider' };
+        case 'callout-info': return { id: state.uid(), type: 'callout', variant: 'info', content: 'Info callout' };
+        case 'callout-warning': return { id: state.uid(), type: 'callout', variant: 'warning', content: 'Warning callout' };
+        case 'callout-success': return { id: state.uid(), type: 'callout', variant: 'success', content: 'Success callout' };
+        case 'callout-error': return { id: state.uid(), type: 'callout', variant: 'error', content: 'Error callout' };
+        case 'quote': return { id: state.uid(), type: 'quote', content: '' };
+        case 'codeBlock': return { id: state.uid(), type: 'codeBlock', content: '// code here', language: 'javascript' };
+        case 'image': return { id: state.uid(), type: 'image', url: '', caption: '' };
+        case 'linkEmbed': return { id: state.uid(), type: 'linkEmbed', url: '', title: '', description: '' };
+        case 'math': return { id: state.uid(), type: 'math', content: 'E = mc^2' };
+        case 'progressTracker': return { id: state.uid(), type: 'progressTracker', label: 'Progress', value: 0 };
+        case 'votingTable': return { id: state.uid(), type: 'votingTable', items: [{ text: 'Option 1', votes: 0 }, { text: 'Option 2', votes: 0 }] };
+        case 'statusTracker': return { id: state.uid(), type: 'statusTracker', items: [{ name: 'Item 1', status: 'not_started' }] };
+        case 'emoji': const e = EMOJIS[Math.floor(Math.random() * EMOJIS.length)]; return { id: state.uid(), type: 'paragraph', content: e };
+        case 'date': return { id: state.uid(), type: 'paragraph', content: `<span class="date-tag">${new Date().toLocaleDateString()}</span>` };
+        case 'board': return null; // handled separately
+        case 'aiDraft': showAIDraftModal(); return null;
+        default: return { id: state.uid(), type: 'paragraph', content: '' };
+    }
+}
+
+// =====================================================================
+// RENDER ENGINE
+// =====================================================================
+function render() {
+    renderSidebar();
+    renderBreadcrumb();
+    const mc = document.getElementById('mainContent');
+    switch (state.currentView) {
+        case 'home': renderHome(mc); break;
+        case 'recent': renderRecent(mc); break;
+        case 'favorites': renderFavorites(mc); break;
+        case 'activity': renderActivityView(mc); break;
+        case 'trash': renderTrash(mc); break;
+        case 'workspace': renderWorkspace(mc); break;
+        case 'page': renderPage(mc); break;
+        default: renderHome(mc);
+    }
+}
+
+// =====================================================================
+// SIDEBAR
+// =====================================================================
+function renderSidebar() {
+    document.querySelectorAll('.sidebar-item[data-view]').forEach(el => {
+        el.classList.toggle('active', el.dataset.view === state.currentView && !state.currentWorkspace);
+    });
+    const tree = document.getElementById('workspaceTree');
+    tree.innerHTML = state.workspaces.map(ws => {
+        const isActive = state.currentWorkspace === ws.id;
+        const expanded = isActive;
+        return `
+        <div class="ws-tree-item">
+            <div class="sidebar-item flex items-center gap-2 px-3 py-1.5 rounded-lg cursor-pointer group ${isActive && !state.currentPage ? 'active' : ''}" onclick="navigateWorkspace('${ws.id}')">
+                <i class="fas fa-chevron-right text-[9px] text-gray-400 transition-transform ${expanded ? 'rotate-90' : ''}"></i>
+                <span class="text-base">${ws.emoji}</span>
+                <span class="text-sm truncate flex-1 dark:text-gray-300">${ws.name}</span>
+                <button class="w-5 h-5 items-center justify-center rounded hover:bg-gray-200 dark:hover:bg-lp-darkBorder text-gray-400 hidden group-hover:flex" onclick="event.stopPropagation();showWSContextMenu('${ws.id}',event)"><i class="fas fa-ellipsis-h text-[10px]"></i></button>
+            </div>
+            ${expanded ? `<div class="ml-6 space-y-0.5 mt-0.5">${ws.pages.map(p => `
+                <div class="sidebar-item flex items-center gap-2 px-3 py-1 rounded-lg cursor-pointer text-sm group ${state.currentPage === p.id ? 'active' : ''}" onclick="navigatePage('${ws.id}','${p.id}')">
+                    <span class="text-sm">${p.emoji}</span>
+                    <span class="truncate flex-1 dark:text-gray-300">${p.name}</span>
+                    ${p.isFavorite ? '<i class="fas fa-star text-[9px] text-yellow-400"></i>' : ''}
+                </div>
+            `).join('')}
+                <div class="flex items-center gap-2 px-3 py-1 rounded-lg cursor-pointer text-sm text-gray-400 hover:text-lp-purple hover:bg-lp-purple/5" onclick="showCreatePageModal('${ws.id}')">
+                    <i class="fas fa-plus text-[10px]"></i><span>Add page</span>
+                </div>
+            </div>` : ''}
+        </div>`;
+    }).join('');
+}
+
+// =====================================================================
+// BREADCRUMB
+// =====================================================================
+function renderBreadcrumb() {
+    const bc = document.getElementById('breadcrumb');
+    let parts = [];
+    if (state.currentView === 'home') parts = [{label:'Home',icon:'fa-home'}];
+    else if (state.currentView === 'recent') parts = [{label:'Recent',icon:'fa-clock'}];
+    else if (state.currentView === 'favorites') parts = [{label:'Favorites',icon:'fa-star'}];
+    else if (state.currentView === 'activity') parts = [{label:'Activity',icon:'fa-bolt'}];
+    else if (state.currentView === 'trash') parts = [{label:'Trash',icon:'fa-trash'}];
+    else if (state.currentView === 'workspace') {
+        const ws = state.getWorkspace(state.currentWorkspace);
+        if (ws) parts = [{label:'Home',icon:'fa-home',click:'home'},{label:`${ws.emoji} ${ws.name}`}];
+    } else if (state.currentView === 'page') {
+        const ws = state.getWorkspace(state.currentWorkspace);
+        const pg = state.getPage(state.currentWorkspace, state.currentPage);
+        if (ws && pg) parts = [{label:'Home',icon:'fa-home',click:'home'},{label:`${ws.emoji} ${ws.name}`,click:`ws:${ws.id}`},{label:`${pg.emoji} ${pg.name}`}];
+    }
+    bc.innerHTML = parts.map((p, i) => {
+        const isLast = i === parts.length - 1;
+        const clickAttr = p.click ? `onclick="breadcrumbNav('${p.click}')" style="cursor:pointer"` : '';
+        return `${i > 0 ? '<i class="fas fa-chevron-right text-[8px] text-gray-300 mx-1"></i>' : ''}
+        <span class="${isLast ? 'text-gray-800 dark:text-white font-medium' : 'hover:text-lp-purple'} truncate text-sm" ${clickAttr}>${p.icon ? `<i class="fas ${p.icon} text-xs mr-1"></i>` : ''}${p.label}</span>`;
+    }).join('');
+}
+function breadcrumbNav(target) {
+    if (target === 'home') { state.currentView = 'home'; state.currentWorkspace = null; state.currentPage = null; }
+    else if (target.startsWith('ws:')) { state.currentView = 'workspace'; state.currentWorkspace = target.split(':')[1]; state.currentPage = null; }
+    render();
+}
+
+// =====================================================================
+// HOME VIEW
+// =====================================================================
+function renderHome(mc) {
+    const recent = state.getRecentPages().slice(0, 8);
+    const favs = state.getFavoritePages().slice(0, 4);
+    mc.innerHTML = `
+    <div class="max-w-5xl mx-auto p-8 fade-in">
+        <div class="mb-8">
+            <h1 class="text-3xl font-bold dark:text-white mb-1">Welcome back, ${state.profile.name} 👋</h1>
+            <p class="text-gray-400 text-sm">Your collaborative workspace awaits.</p>
+        </div>
+        <!-- Quick Actions -->
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-8">
+            <button onclick="showCreatePageQuick('document')" class="bg-white dark:bg-lp-darkCard border border-gray-200 dark:border-lp-darkBorder rounded-xl p-4 hover:shadow-md hover:border-lp-purple/30 transition-all text-left group">
+                <div class="w-10 h-10 bg-lp-purple/10 rounded-lg flex items-center justify-center mb-3 group-hover:bg-lp-purple/20 transition-colors"><i class="fas fa-file-alt text-lp-purple"></i></div>
+                <div class="font-semibold text-sm dark:text-white">New Page</div>
+                <div class="text-xs text-gray-400 mt-0.5">Create a document</div>
+            </button>
+            <button onclick="showCreatePageQuick('board')" class="bg-white dark:bg-lp-darkCard border border-gray-200 dark:border-lp-darkBorder rounded-xl p-4 hover:shadow-md hover:border-lp-purple/30 transition-all text-left group">
+                <div class="w-10 h-10 bg-blue-50 dark:bg-blue-900/20 rounded-lg flex items-center justify-center mb-3 group-hover:bg-blue-100 transition-colors"><i class="fas fa-columns text-blue-500"></i></div>
+                <div class="font-semibold text-sm dark:text-white">New Board</div>
+                <div class="text-xs text-gray-400 mt-0.5">Kanban board</div>
+            </button>
+            <button onclick="showCreateModal()" class="bg-white dark:bg-lp-darkCard border border-gray-200 dark:border-lp-darkBorder rounded-xl p-4 hover:shadow-md hover:border-lp-purple/30 transition-all text-left group">
+                <div class="w-10 h-10 bg-green-50 dark:bg-green-900/20 rounded-lg flex items-center justify-center mb-3 group-hover:bg-green-100 transition-colors"><i class="fas fa-folder-plus text-green-500"></i></div>
+                <div class="font-semibold text-sm dark:text-white">New Workspace</div>
+                <div class="text-xs text-gray-400 mt-0.5">Organize pages</div>
+            </button>
+            <button onclick="showTemplateModal()" class="bg-white dark:bg-lp-darkCard border border-gray-200 dark:border-lp-darkBorder rounded-xl p-4 hover:shadow-md hover:border-lp-purple/30 transition-all text-left group">
+                <div class="w-10 h-10 bg-purple-50 dark:bg-purple-900/20 rounded-lg flex items-center justify-center mb-3 group-hover:bg-purple-100 transition-colors"><i class="fas fa-magic text-purple-500"></i></div>
+                <div class="font-semibold text-sm dark:text-white">From Template</div>
+                <div class="text-xs text-gray-400 mt-0.5">Start with a template</div>
+            </button>
+        </div>
+        ${favs.length > 0 ? `
+        <div class="mb-8">
+            <h2 class="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-3"><i class="fas fa-star text-yellow-400 mr-1.5"></i>Favorites</h2>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">${favs.map(p => pageCard(p)).join('')}</div>
+        </div>` : ''}
+        <div class="mb-8">
+            <h2 class="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-3"><i class="fas fa-clock mr-1.5"></i>Recent</h2>
+            ${recent.length > 0 ? `<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">${recent.map(p => pageCard(p)).join('')}</div>` : '<p class="text-gray-400 text-sm">No recent pages. Create your first page!</p>'}
+        </div>
+        <!-- Workspaces -->
+        <div>
+            <h2 class="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-3"><i class="fas fa-layer-group mr-1.5"></i>Workspaces</h2>
+            ${state.workspaces.length > 0 ? `<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">${state.workspaces.map(ws => `
+                <div class="bg-white dark:bg-lp-darkCard border border-gray-200 dark:border-lp-darkBorder rounded-xl p-4 hover:shadow-md hover:border-lp-purple/30 transition-all cursor-pointer group" onclick="navigateWorkspace('${ws.id}')">
+                    <div class="flex items-center gap-3 mb-2">
+                        <div class="w-10 h-10 rounded-lg flex items-center justify-center text-xl" style="background:${ws.color}15">${ws.emoji}</div>
+                        <div class="flex-1 min-w-0"><div class="font-semibold text-sm dark:text-white truncate">${ws.name}</div><div class="text-xs text-gray-400">${ws.pages.length} page${ws.pages.length !== 1 ? 's' : ''}</div></div>
+                        ${ws.isFavorite ? '<i class="fas fa-star text-yellow-400 text-xs"></i>' : ''}
+                    </div>
+                </div>
+            `).join('')}</div>` : '<p class="text-gray-400 text-sm">No workspaces yet. Create one to get started!</p>'}
+        </div>
+    </div>`;
+}
+
+function pageCard(p) {
+    return `<div class="bg-white dark:bg-lp-darkCard border border-gray-200 dark:border-lp-darkBorder rounded-xl overflow-hidden hover:shadow-md hover:border-lp-purple/30 transition-all cursor-pointer group" onclick="navigatePage('${p.workspaceId}','${p.id}')">
+        ${p.cover ? `<div class="${p.cover} h-16"></div>` : ''}
+        <div class="p-3">
+            <div class="flex items-center gap-2 mb-1">
+                <span class="text-base">${p.emoji}</span>
+                <span class="font-medium text-sm dark:text-white truncate">${p.name}</span>
+            </div>
+            <div class="flex items-center gap-2 text-[11px] text-gray-400">
+                <span>${p.workspaceEmoji} ${p.workspaceName}</span>
+                <span>·</span>
+                <span>${p.type === 'board' ? '📋 Board' : '📄 Doc'}</span>
+                ${p.isFavorite ? '<i class="fas fa-star text-yellow-400 text-[9px]"></i>' : ''}
+            </div>
+        </div>
+    </div>`;
+}
+
+// =====================================================================
+// RECENT / FAVORITES / ACTIVITY / TRASH
+// =====================================================================
+function renderRecent(mc) {
+    const pages = state.getRecentPages();
+    mc.innerHTML = `<div class="max-w-4xl mx-auto p-8 fade-in"><h1 class="text-2xl font-bold dark:text-white mb-1">Recent</h1><p class="text-gray-400 text-sm mb-6">Pages you've recently visited</p>${pages.length ? `<div class="space-y-2">${pages.map(p => pageRow(p)).join('')}</div>` : '<p class="text-gray-400 text-sm">No recent pages.</p>'}</div>`;
+}
+function renderFavorites(mc) {
+    const pages = state.getFavoritePages();
+    mc.innerHTML = `<div class="max-w-4xl mx-auto p-8 fade-in"><h1 class="text-2xl font-bold dark:text-white mb-1">Favorites</h1><p class="text-gray-400 text-sm mb-6">Your starred pages</p>${pages.length ? `<div class="space-y-2">${pages.map(p => pageRow(p)).join('')}</div>` : '<p class="text-gray-400 text-sm">No favorites yet. Star a page to see it here.</p>'}</div>`;
+}
+function renderActivityView(mc) {
+    mc.innerHTML = `<div class="max-w-4xl mx-auto p-8 fade-in"><h1 class="text-2xl font-bold dark:text-white mb-1">Activity</h1><p class="text-gray-400 text-sm mb-6">Recent activity across your workspaces</p>${state.activity.length ? `<div class="space-y-3">${state.activity.map(a => `<div class="activity-item"><p class="text-sm dark:text-gray-300"><i class="fas ${a.icon} text-xs text-lp-purple mr-2"></i>${a.text}</p><p class="text-[10px] text-gray-400 mt-0.5">${timeAgo(a.time)}</p></div>`).join('')}</div>` : '<p class="text-gray-400 text-sm">No activity yet.</p>'}</div>`;
+}
+function renderTrash(mc) {
+    mc.innerHTML = `<div class="max-w-4xl mx-auto p-8 fade-in"><h1 class="text-2xl font-bold dark:text-white mb-1">Trash</h1><p class="text-gray-400 text-sm mb-6">Deleted pages can be restored</p>${state.trash.length ? `<div class="space-y-2">${state.trash.map(p => `
+        <div class="bg-white dark:bg-lp-darkCard border border-gray-200 dark:border-lp-darkBorder rounded-lg p-3 flex items-center gap-3">
+            <span class="text-lg">${p.emoji}</span>
+            <div class="flex-1 min-w-0"><div class="font-medium text-sm dark:text-white truncate">${p.name}</div><div class="text-xs text-gray-400">from ${p._wsName || 'Unknown'}</div></div>
+            <button onclick="state.restorePage('${p.id}');render()" class="text-xs text-lp-purple hover:underline">Restore</button>
+            <button onclick="if(confirm('Permanently delete?')){state.permanentDelete('${p.id}');render()}" class="text-xs text-red-400 hover:underline">Delete</button>
+        </div>
+    `).join('')}</div>` : '<p class="text-gray-400 text-sm">Trash is empty.</p>'}</div>`;
+}
+
+function pageRow(p) {
+    return `<div class="bg-white dark:bg-lp-darkCard border border-gray-200 dark:border-lp-darkBorder rounded-lg p-3 flex items-center gap-3 hover:shadow-sm transition-shadow cursor-pointer" onclick="navigatePage('${p.workspaceId}','${p.id}')">
+        <span class="text-lg">${p.emoji}</span>
+        <div class="flex-1 min-w-0"><div class="font-medium text-sm dark:text-white truncate">${p.name}</div><div class="text-xs text-gray-400">${p.workspaceEmoji} ${p.workspaceName} · ${p.type === 'board' ? '📋 Board' : '📄 Doc'} · ${timeAgo(p.updatedAt || p.createdAt)}</div></div>
+        ${p.isFavorite ? '<i class="fas fa-star text-yellow-400 text-xs"></i>' : ''}
+    </div>`;
+}
+
+// =====================================================================
+// WORKSPACE VIEW
+// =====================================================================
+function renderWorkspace(mc) {
+    const ws = state.getWorkspace(state.currentWorkspace);
+    if (!ws) { state.currentView = 'home'; render(); return; }
+    mc.innerHTML = `
+    <div class="max-w-5xl mx-auto p-8 fade-in">
+        <div class="flex items-center gap-4 mb-6">
+            <div class="w-14 h-14 rounded-xl flex items-center justify-center text-3xl" style="background:${ws.color}15">${ws.emoji}</div>
+            <div class="flex-1">
+                <div class="flex items-center gap-2">
+                    <h1 class="text-2xl font-bold dark:text-white">${ws.name}</h1>
+                    <button onclick="toggleWSFavorite('${ws.id}')" class="text-sm ${ws.isFavorite ? 'text-yellow-400' : 'text-gray-300 hover:text-yellow-400'}" title="Favorite"><i class="fas fa-star"></i></button>
+                </div>
+                <p class="text-gray-400 text-sm">${ws.pages.length} page${ws.pages.length !== 1 ? 's' : ''} · Created ${timeAgo(ws.createdAt)}</p>
+            </div>
+            <div class="flex items-center gap-2">
+                <button onclick="showCreatePageModal('${ws.id}')" class="bg-lp-purple hover:bg-indigo-600 text-white rounded-lg py-2 px-4 text-sm font-medium transition-colors flex items-center gap-2"><i class="fas fa-plus text-xs"></i>Add Page</button>
+                <button onclick="showWSContextMenu('${ws.id}',event)" class="w-9 h-9 flex items-center justify-center rounded-lg border border-gray-200 dark:border-lp-darkBorder hover:bg-gray-50 dark:hover:bg-lp-darkBorder text-gray-500"><i class="fas fa-ellipsis-h text-sm"></i></button>
+            </div>
+        </div>
+        ${ws.pages.length > 0 ? `<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">${ws.pages.map(p => pageCard({ ...p, workspaceId: ws.id, workspaceName: ws.name, workspaceEmoji: ws.emoji })).join('')}</div>` : `
+        <div class="text-center py-16">
+            <div class="w-16 h-16 bg-gray-100 dark:bg-lp-darkBorder rounded-2xl flex items-center justify-center mx-auto mb-4"><i class="fas fa-file-alt text-2xl text-gray-300"></i></div>
+            <h3 class="font-semibold text-gray-600 dark:text-gray-300 mb-1">No pages yet</h3>
+            <p class="text-gray-400 text-sm mb-4">Create your first page or start from a template</p>
+            <button onclick="showCreatePageModal('${ws.id}')" class="bg-lp-purple hover:bg-indigo-600 text-white rounded-lg py-2 px-6 text-sm font-medium transition-colors"><i class="fas fa-plus mr-2"></i>Create Page</button>
+        </div>`}
+    </div>`;
+}
+
+// =====================================================================
+// PAGE VIEW (Document or Board)
+// =====================================================================
+function renderPage(mc) {
+    const page = state.getPage(state.currentWorkspace, state.currentPage);
+    if (!page) { state.currentView = 'home'; render(); return; }
+    page.updatedAt = Date.now();
+    state.save();
+    if (page.type === 'board') renderBoardPage(mc, page);
+    else renderDocumentPage(mc, page);
+}
+
+// =====================================================================
+// DOCUMENT PAGE EDITOR
+// =====================================================================
+function renderDocumentPage(mc, page) {
+    const ws = state.getWorkspace(state.currentWorkspace);
+    mc.innerHTML = `
+    <div class="max-w-4xl mx-auto fade-in ${page.locked ? 'page-locked relative' : ''}">
+        ${page.cover ? `<div class="${page.cover} cover-img relative group"><button onclick="changeCover('${state.currentWorkspace}','${page.id}')" class="absolute bottom-2 right-2 bg-white/80 dark:bg-black/50 rounded-lg px-3 py-1 text-xs font-medium opacity-0 group-hover:opacity-100 transition-opacity">Change cover</button></div>` : ''}
+        <div class="p-8 pb-32">
+            <!-- Page Header -->
+            <div class="flex items-center gap-3 mb-1">
+                <button onclick="showPageEmojiPicker(event,'${state.currentWorkspace}','${page.id}')" class="text-3xl hover:bg-gray-100 dark:hover:bg-lp-darkBorder rounded-lg p-1 transition-colors emoji-btn">${page.emoji}</button>
+                <div class="flex items-center gap-2">
+                    <button onclick="togglePageFavorite('${state.currentWorkspace}','${page.id}')" class="text-sm ${page.isFavorite ? 'text-yellow-400' : 'text-gray-300 hover:text-yellow-400'}" title="Favorite"><i class="fas fa-star"></i></button>
+                    ${!page.cover ? `<button onclick="addCover('${state.currentWorkspace}','${page.id}')" class="text-xs text-gray-400 hover:text-lp-purple"><i class="fas fa-image mr-1"></i>Add cover</button>` : ''}
+                    <button onclick="togglePageLock('${state.currentWorkspace}','${page.id}')" class="text-xs ${page.locked ? 'text-red-400' : 'text-gray-400 hover:text-lp-purple'}"><i class="fas fa-${page.locked ? 'lock' : 'lock-open'} mr-1"></i>${page.locked ? 'Unlock' : 'Lock'}</button>
+                    <button onclick="showPageMenu(event,'${state.currentWorkspace}','${page.id}')" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"><i class="fas fa-ellipsis-h text-sm"></i></button>
+                </div>
+            </div>
+            <!-- Page Title -->
+            <div contenteditable="true" class="text-3xl font-bold outline-none mb-1 dark:text-white block-editable" data-placeholder="Untitled" oninput="updatePageTitle(this,'${state.currentWorkspace}','${page.id}')">${page.name}</div>
+            <!-- Tags -->
+            <div class="flex items-center gap-1.5 mb-4 flex-wrap" id="pageTags">
+                ${(page.tags || []).map(t => `<span class="tag" style="background:${t.bg};color:${t.color}">${t.name} <button onclick="removePageTag('${state.currentWorkspace}','${page.id}','${t.name}')" class="ml-1 opacity-60 hover:opacity-100">×</button></span>`).join('')}
+                <button onclick="addPageTag('${state.currentWorkspace}','${page.id}')" class="text-xs text-gray-400 hover:text-lp-purple"><i class="fas fa-plus text-[9px] mr-1"></i>Tag</button>
+            </div>
+            <!-- Reactions -->
+            <div class="flex items-center gap-1.5 mb-6" id="pageReactions">
+                ${renderReactions(page.reactions || {})}
+                <button onclick="addReaction('${state.currentWorkspace}','${page.id}')" class="reaction-btn text-gray-400 hover:text-gray-600"><i class="fas fa-plus text-[10px]"></i></button>
+            </div>
+            <!-- Blocks -->
+            <div id="blocksContainer" class="space-y-2">${(page.blocks || []).map((b, i) => renderBlock(b, i, page)).join('')}</div>
+            <!-- Add Block -->
+            <div class="mt-4 flex items-center gap-2">
+                <button onclick="addBlockAtEnd('paragraph')" class="text-sm text-gray-400 hover:text-lp-purple flex items-center gap-1.5 py-2"><i class="fas fa-plus text-xs"></i>Add block</button>
+                <span class="text-gray-300">|</span>
+                <button onclick="showSlashMenuAtEnd()" class="text-sm text-gray-400 hover:text-lp-purple flex items-center gap-1.5 py-2"><i class="fas fa-slash text-xs"></i>Commands</button>
+                <span class="text-gray-300">|</span>
+                <button onclick="showAIDraftModal()" class="text-sm text-gray-400 hover:text-lp-purple flex items-center gap-1.5 py-2"><i class="fas fa-robot text-xs"></i>AI Draft</button>
+            </div>
+            <!-- Comments Section -->
+            <div class="mt-8 pt-6 border-t border-gray-200 dark:border-lp-darkBorder">
+                <h3 class="font-semibold text-sm dark:text-white mb-3"><i class="fas fa-comment-alt text-lp-purple mr-2"></i>Comments</h3>
+                <div id="commentsSection">${renderComments(page.comments || [])}</div>
+                <div class="flex items-start gap-3 mt-3">
+                    <div class="w-7 h-7 bg-lp-purple rounded-full flex items-center justify-center text-white text-[10px] font-bold flex-shrink-0">${state.profile.initials}</div>
+                    <div class="flex-1">
+                        <input type="text" id="commentInput" placeholder="Add a comment..." class="w-full bg-gray-100 dark:bg-lp-darkBg rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-lp-purple/30 dark:text-lp-darkText" onkeydown="if(event.key==='Enter')addComment('${state.currentWorkspace}','${page.id}')">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>`;
+    initBlockEditors(page);
+}
+
+// =====================================================================
+// BLOCK RENDERER
+// =====================================================================
+function renderBlock(block, index, page) {
+    const wsId = state.currentWorkspace;
+    const pgId = page.id;
+    const dragHandle = `<div class="opacity-0 group-hover:opacity-100 absolute -left-7 top-1 cursor-grab text-gray-300 hover:text-gray-500 drag-handle" title="Drag to reorder"><i class="fas fa-grip-vertical text-xs"></i></div>`;
+    const deleteBtn = `<button class="opacity-0 group-hover:opacity-100 absolute -right-6 top-1 text-gray-300 hover:text-red-400 text-xs" onclick="deleteBlock('${wsId}','${pgId}',${index})" title="Delete block"><i class="fas fa-times"></i></button>`;
+    let html = '';
+    switch (block.type) {
+        case 'heading1':
+            html = `<div contenteditable="true" class="text-2xl font-bold outline-none dark:text-white block-editable" data-placeholder="Heading 1" data-block-idx="${index}" data-field="content">${block.content || ''}</div>`; break;
+        case 'heading2':
+            html = `<div contenteditable="true" class="text-xl font-semibold outline-none dark:text-white block-editable" data-placeholder="Heading 2" data-block-idx="${index}" data-field="content">${block.content || ''}</div>`; break;
+        case 'heading3':
+            html = `<div contenteditable="true" class="text-lg font-semibold outline-none dark:text-white block-editable" data-placeholder="Heading 3" data-block-idx="${index}" data-field="content">${block.content || ''}</div>`; break;
+        case 'paragraph':
+            html = `<div contenteditable="true" class="text-sm leading-relaxed outline-none dark:text-gray-300 block-editable" data-placeholder="Type '/' for commands..." data-block-idx="${index}" data-field="content">${block.content || ''}</div>`; break;
+        case 'bulletList':
+            html = `<ul class="list-disc list-inside space-y-1">${(block.items || []).map((item, ii) => `<li><span contenteditable="true" class="text-sm outline-none dark:text-gray-300 inline-block" data-block-idx="${index}" data-item-idx="${ii}" data-list-type="bullet">${item}</span></li>`).join('')}</ul><button onclick="addListItem('${wsId}','${pgId}',${index},'bullet')" class="text-xs text-gray-400 hover:text-lp-purple mt-1"><i class="fas fa-plus text-[9px] mr-1"></i>Add item</button>`; break;
+        case 'numberedList':
+            html = `<ol class="list-decimal list-inside space-y-1">${(block.items || []).map((item, ii) => `<li><span contenteditable="true" class="text-sm outline-none dark:text-gray-300 inline-block" data-block-idx="${index}" data-item-idx="${ii}" data-list-type="numbered">${item}</span></li>`).join('')}</ol><button onclick="addListItem('${wsId}','${pgId}',${index},'numbered')" class="text-xs text-gray-400 hover:text-lp-purple mt-1"><i class="fas fa-plus text-[9px] mr-1"></i>Add item</button>`; break;
+        case 'checklist':
+            html = `<div class="space-y-1.5">${(block.items || []).map((item, ii) => `<div class="checklist-item flex items-center gap-2 ${item.done ? 'done' : ''}"><input type="checkbox" ${item.done ? 'checked' : ''} onchange="toggleCheckItem('${wsId}','${pgId}',${index},${ii})" class="w-4 h-4 rounded border-gray-300 text-lp-purple focus:ring-lp-purple cursor-pointer"><span contenteditable="true" class="cl-text text-sm outline-none flex-1 dark:text-gray-300" data-block-idx="${index}" data-item-idx="${ii}" data-list-type="checklist">${item.text || ''}</span></div>`).join('')}</div><button onclick="addCheckItem('${wsId}','${pgId}',${index})" class="text-xs text-gray-400 hover:text-lp-purple mt-1"><i class="fas fa-plus text-[9px] mr-1"></i>Add item</button>`; break;
+        case 'taskList':
+            html = renderTaskList(block, index, wsId, pgId); break;
+        case 'toggle':
+            html = `<div class="border border-gray-200 dark:border-lp-darkBorder rounded-lg overflow-hidden"><div class="flex items-center gap-2 px-3 py-2 cursor-pointer hover:bg-gray-50 dark:hover:bg-lp-darkBorder" onclick="toggleToggle('${wsId}','${pgId}',${index})"><i class="fas fa-caret-${block.open ? 'down' : 'right'} text-gray-400 w-4"></i><span contenteditable="true" class="text-sm font-medium outline-none flex-1 dark:text-white" data-block-idx="${index}" data-field="title">${block.title || 'Toggle'}</span></div><div class="toggle-content ${block.open ? 'open' : ''} px-3 pb-3 pt-1"><div contenteditable="true" class="text-sm outline-none dark:text-gray-300 block-editable" data-placeholder="Toggle content..." data-block-idx="${index}" data-field="content">${block.content || ''}</div></div></div>`; break;
+        case 'divider':
+            html = `<hr class="divider-block">`; break;
+        case 'callout':
+            const cIcons = { info: 'fa-info-circle text-blue-500', warning: 'fa-exclamation-triangle text-yellow-500', success: 'fa-check-circle text-green-500', error: 'fa-times-circle text-red-500' };
+            html = `<div class="callout callout-${block.variant || 'info'}"><div class="flex items-start gap-2"><i class="fas ${cIcons[block.variant || 'info']} mt-0.5"></i><div contenteditable="true" class="text-sm outline-none flex-1 dark:text-gray-300 block-editable" data-placeholder="Callout text..." data-block-idx="${index}" data-field="content">${block.content || ''}</div></div></div>`; break;
+        case 'quote':
+            html = `<div class="quote-block"><div contenteditable="true" class="text-sm outline-none block-editable" data-placeholder="Quote..." data-block-idx="${index}" data-field="content">${block.content || ''}</div></div>`; break;
+        case 'codeBlock':
+            html = `<div class="code-block"><div contenteditable="true" class="outline-none whitespace-pre" data-block-idx="${index}" data-field="content">${block.content || ''}</div></div>`; break;
+        case 'image':
+            html = `<div class="rounded-lg overflow-hidden border border-gray-200 dark:border-lp-darkBorder">${block.url ? `<img src="${block.url}" class="w-full max-h-96 object-cover" onerror="this.parentElement.innerHTML='<div class=\\'p-4 text-center text-gray-400 text-sm\\'>Image failed to load</div>'">` : `<div class="p-6 text-center"><button onclick="setImageUrl(${index},'${wsId}','${pgId}')" class="text-sm text-lp-purple hover:underline"><i class="fas fa-image mr-1"></i>Add image URL</button></div>`}${block.caption ? `<div class="px-3 py-2 text-xs text-gray-400 text-center">${block.caption}</div>` : ''}</div>`; break;
+        case 'linkEmbed':
+            html = `<div class="embed-card p-4">${block.url ? `<a href="${block.url}" target="_blank" class="flex items-center gap-3 no-underline"><div class="w-10 h-10 bg-gray-100 dark:bg-lp-darkBorder rounded-lg flex items-center justify-center flex-shrink-0"><i class="fas fa-external-link-alt text-gray-400"></i></div><div class="flex-1 min-w-0"><div class="font-medium text-sm dark:text-white truncate">${block.title || block.url}</div><div class="text-xs text-gray-400 truncate">${block.description || block.url}</div></div></a>` : `<button onclick="setLinkEmbed(${index},'${wsId}','${pgId}')" class="text-sm text-lp-purple hover:underline"><i class="fas fa-link mr-1"></i>Add link</button>`}</div>`; break;
+        case 'math':
+            html = `<div class="math-block"><div contenteditable="true" class="outline-none text-lg" data-block-idx="${index}" data-field="content">${block.content || ''}</div></div>`; break;
+        case 'progressTracker':
+            html = `<div class="bg-gray-50 dark:bg-lp-darkBorder/50 rounded-lg p-3"><div class="flex items-center justify-between mb-2"><span class="text-sm font-medium dark:text-white">${block.label || 'Progress'}</span><span class="text-sm font-bold text-lp-purple">${block.value || 0}%</span></div><div class="progress-bar"><div class="progress-fill bg-lp-purple" style="width:${block.value || 0}%"></div></div><input type="range" min="0" max="100" value="${block.value || 0}" class="w-full mt-2 accent-lp-purple" oninput="updateProgress('${wsId}','${pgId}',${index},this.value)"></div>`; break;
+        case 'votingTable':
+            html = `<div class="space-y-2">${(block.items || []).map((item, ii) => `<div class="flex items-center gap-3 bg-gray-50 dark:bg-lp-darkBorder/50 rounded-lg p-3"><div class="flex items-center gap-1"><button onclick="vote('${wsId}','${pgId}',${index},${ii},1)" class="vote-btn text-green-500"><i class="fas fa-thumbs-up text-xs"></i></button><span class="text-sm font-bold w-8 text-center ${item.votes > 0 ? 'text-green-500' : item.votes < 0 ? 'text-red-500' : 'text-gray-400'}">${item.votes || 0}</span><button onclick="vote('${wsId}','${pgId}',${index},${ii},-1)" class="vote-btn text-red-500"><i class="fas fa-thumbs-down text-xs"></i></button></div><span contenteditable="true" class="text-sm outline-none flex-1 dark:text-gray-300" data-block-idx="${index}" data-item-idx="${ii}" data-list-type="voting">${item.text || ''}</span></div>`).join('')}<button onclick="addVoteItem('${wsId}','${pgId}',${index})" class="text-xs text-gray-400 hover:text-lp-purple"><i class="fas fa-plus text-[9px] mr-1"></i>Add option</button></div>`; break;
+        case 'statusTracker':
+            html = `<div class="space-y-2">${(block.items || []).map((item, ii) => `<div class="flex items-center gap-3 bg-gray-50 dark:bg-lp-darkBorder/50 rounded-lg p-3"><select onchange="updateStatusItem('${wsId}','${pgId}',${index},${ii},this.value)" class="text-xs rounded-lg border border-gray-200 dark:border-lp-darkBorder bg-white dark:bg-lp-darkCard px-2 py-1 outline-none">${STATUSES.map(s => `<option value="${s.value}" ${item.status === s.value ? 'selected' : ''}>${s.name}</option>`).join('')}</select><span contenteditable="true" class="text-sm outline-none flex-1 dark:text-gray-300" data-block-idx="${index}" data-item-idx="${ii}" data-list-type="status">${item.name || ''}</span></div>`).join('')}<button onclick="addStatusItem('${wsId}','${pgId}',${index})" class="text-xs text-gray-400 hover:text-lp-purple"><i class="fas fa-plus text-[9px] mr-1"></i>Add item</button></div>`; break;
+        case 'table':
+            html = renderTableBlock(block, index, wsId, pgId); break;
+        default:
+            html = `<div class="text-sm text-gray-400">[Unknown block type: ${block.type}]</div>`;
+    }
+    return `<div class="relative group pl-7 pr-6 py-1 rounded-lg hover:bg-gray-50/50 dark:hover:bg-white/[.02] transition-colors" data-block-index="${index}">${dragHandle}${deleteBtn}${html}</div>`;
+}
+
+// =====================================================================
+// TASK LIST COMPONENT
+// =====================================================================
+function renderTaskList(block, index, wsId, pgId) {
+    return `<div class="border border-gray-200 dark:border-lp-darkBorder rounded-lg overflow-hidden">
+        <div class="bg-gray-50 dark:bg-lp-darkBorder/50 px-3 py-2 flex items-center gap-2 border-b border-gray-200 dark:border-lp-darkBorder">
+            <i class="fas fa-tasks text-lp-purple text-xs"></i><span class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Task List</span>
+        </div>
+        <div class="divide-y divide-gray-100 dark:divide-lp-darkBorder">
+            ${(block.items || []).map((item, ii) => {
+                const st = STATUSES.find(s => s.value === item.status) || STATUSES[0];
+                return `<div class="flex items-center gap-3 px-3 py-2 hover:bg-gray-50/50 dark:hover:bg-white/[.02]">
+                    <select onchange="updateTaskStatus('${wsId}','${pgId}',${index},${ii},this.value)" class="text-[10px] rounded-full border-0 ${st.class} px-2 py-0.5 outline-none cursor-pointer font-semibold">${STATUSES.map(s => `<option value="${s.value}" ${item.status === s.value ? 'selected' : ''}>${s.name}</option>`).join('')}</select>
+                    <span contenteditable="true" class="text-sm outline-none flex-1 dark:text-gray-300 ${item.status === 'done' ? 'line-through text-gray-400' : ''}" data-block-idx="${index}" data-item-idx="${ii}" data-list-type="task">${item.text || ''}</span>
+                    <select onchange="updateTaskPriority('${wsId}','${pgId}',${index},${ii},this.value)" class="text-[10px] border border-gray-200 dark:border-lp-darkBorder rounded px-1 py-0.5 outline-none bg-white dark:bg-lp-darkCard">${PRIORITIES.map(p => `<option value="${p.value}" ${item.priority === p.value ? 'selected' : ''}>${p.icon} ${p.name}</option>`).join('')}</select>
+                    <input type="date" value="${item.due || ''}" onchange="updateTaskDue('${wsId}','${pgId}',${index},${ii},this.value)" class="text-[10px] border border-gray-200 dark:border-lp-darkBorder rounded px-1 py-0.5 outline-none bg-white dark:bg-lp-darkCard">
+                    <input type="text" value="${item.assignee || ''}" placeholder="Assign" onchange="updateTaskAssignee('${wsId}','${pgId}',${index},${ii},this.value)" class="text-[10px] border border-gray-200 dark:border-lp-darkBorder rounded px-1 py-0.5 outline-none bg-white dark:bg-lp-darkCard w-16">
+                </div>`;
+            }).join('')}
+        </div>
+        <button onclick="addTaskItem('${wsId}','${pgId}',${index})" class="w-full text-left px-3 py-2 text-xs text-gray-400 hover:text-lp-purple hover:bg-gray-50 dark:hover:bg-lp-darkBorder transition-colors"><i class="fas fa-plus text-[9px] mr-1"></i>Add task</button>
+    </div>`;
+}
+
+// =====================================================================
+// TABLE COMPONENT
+// =====================================================================
+function renderTableBlock(block, index, wsId, pgId) {
+    return `<div class="border border-gray-200 dark:border-lp-darkBorder rounded-lg overflow-hidden overflow-x-auto">
+        <table class="table-component w-full">
+            <thead><tr>${(block.headers || []).map((h, hi) => `<th><span contenteditable="true" class="outline-none" data-block-idx="${index}" data-header-idx="${hi}">${h}</span></th>`).join('')}<th class="w-8"><button onclick="addTableColumn('${wsId}','${pgId}',${index})" class="text-gray-400 hover:text-lp-purple"><i class="fas fa-plus text-[10px]"></i></button></th></tr></thead>
+            <tbody>${(block.rows || []).map((row, ri) => `<tr>${row.map((cell, ci) => `<td><span contenteditable="true" class="outline-none block w-full dark:text-gray-300" data-block-idx="${index}" data-row-idx="${ri}" data-col-idx="${ci}">${cell}</span></td>`).join('')}<td></td></tr>`).join('')}</tbody>
+        </table>
+        <button onclick="addTableRow('${wsId}','${pgId}',${index})" class="w-full text-left px-3 py-2 text-xs text-gray-400 hover:text-lp-purple hover:bg-gray-50 dark:hover:bg-lp-darkBorder"><i class="fas fa-plus text-[9px] mr-1"></i>Add row</button>
+    </div>`;
+}
+
+// =====================================================================
+// BOARD PAGE (KANBAN)
+// =====================================================================
+function renderBoardPage(mc, page) {
+    const ws = state.getWorkspace(state.currentWorkspace);
+    const board = page.board || { lists: [] };
+    mc.innerHTML = `
+    <div class="h-full flex flex-col">
+        <!-- Board Header -->
+        <div class="px-6 py-3 border-b border-gray-200 dark:border-lp-darkBorder flex items-center gap-3 flex-shrink-0 bg-white dark:bg-lp-darkSidebar">
+            <button onclick="showPageEmojiPicker(event,'${state.currentWorkspace}','${page.id}')" class="text-xl emoji-btn">${page.emoji}</button>
+            <div contenteditable="true" class="text-lg font-bold outline-none dark:text-white" oninput="updatePageTitle(this,'${state.currentWorkspace}','${page.id}')">${page.name}</div>
+            <button onclick="togglePageFavorite('${state.currentWorkspace}','${page.id}')" class="text-sm ${page.isFavorite ? 'text-yellow-400' : 'text-gray-300 hover:text-yellow-400'}"><i class="fas fa-star"></i></button>
+            <div class="flex-1"></div>
+            <!-- Board Filters -->
+            <div class="flex items-center gap-1.5">
+                <button onclick="toggleBoardFilter('label')" class="board-filter-btn text-xs px-2.5 py-1 rounded-lg border border-gray-200 dark:border-lp-darkBorder" id="filterLabelBtn"><i class="fas fa-tag mr-1"></i>Label</button>
+                <button onclick="toggleBoardFilter('priority')" class="board-filter-btn text-xs px-2.5 py-1 rounded-lg border border-gray-200 dark:border-lp-darkBorder" id="filterPriorityBtn"><i class="fas fa-flag mr-1"></i>Priority</button>
+                <button onclick="toggleBoardFilter('due')" class="board-filter-btn text-xs px-2.5 py-1 rounded-lg border border-gray-200 dark:border-lp-darkBorder" id="filterDueBtn"><i class="fas fa-calendar mr-1"></i>Due</button>
+                <input type="text" id="boardSearchInput" placeholder="Search cards..." class="text-xs bg-gray-100 dark:bg-lp-darkBg rounded-lg px-2.5 py-1.5 outline-none w-36 dark:text-lp-darkText" oninput="filterBoardCards()">
+            </div>
+            <button onclick="showPageMenu(event,'${state.currentWorkspace}','${page.id}')" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"><i class="fas fa-ellipsis-h"></i></button>
+        </div>
+        <!-- Board Content -->
+        <div class="flex-1 overflow-x-auto overflow-y-hidden p-4">
+            <div id="boardContainer" class="flex gap-4 h-full items-start">
+                ${board.lists.map((list, li) => renderBoardList(list, li, page)).join('')}
+                <!-- Add List -->
+                <div class="board-list flex-shrink-0">
+                    <button onclick="addBoardList('${state.currentWorkspace}','${page.id}')" class="w-full bg-gray-100 dark:bg-lp-darkBorder/50 hover:bg-gray-200 dark:hover:bg-lp-darkBorder rounded-xl p-3 text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 transition-colors flex items-center justify-center gap-2"><i class="fas fa-plus text-xs"></i>Add list</button>
+                </div>
+            </div>
+        </div>
+    </div>`;
+    initBoardSortable(page);
+}
+
+function renderBoardList(list, listIndex, page) {
+    const wipLimit = list.wipLimit || 0;
+    const overWip = wipLimit > 0 && (list.cards || []).length > wipLimit;
+    return `
+    <div class="board-list flex-shrink-0 bg-gray-100/80 dark:bg-lp-darkCard/80 rounded-xl flex flex-col max-h-full" data-list-id="${list.id}">
+        <div class="px-3 pt-3 pb-2 flex items-center gap-2">
+            <div contenteditable="true" class="text-sm font-semibold outline-none flex-1 dark:text-white" onblur="updateListTitle(this,'${state.currentWorkspace}','${page.id}','${list.id}')">${list.title}</div>
+            <span class="text-[10px] text-gray-400 font-medium">${(list.cards || []).length}${wipLimit ? `/${wipLimit}` : ''}</span>
+            <button onclick="showListMenu(event,'${state.currentWorkspace}','${page.id}','${list.id}')" class="w-6 h-6 flex items-center justify-center rounded hover:bg-gray-200 dark:hover:bg-lp-darkBorder text-gray-400"><i class="fas fa-ellipsis-h text-[10px]"></i></button>
+        </div>
+        ${overWip ? '<div class="wip-warning mx-3 mb-2"><i class="fas fa-exclamation-triangle mr-1"></i>WIP limit exceeded!</div>' : ''}
+        <div class="flex-1 overflow-y-auto px-2 pb-2 space-y-2 card-list" data-list-id="${list.id}">
+            ${(list.cards || []).map(card => renderBoardCard(card, list.id, page)).join('')}
+        </div>
+        <div class="px-2 pb-2">
+            <button onclick="addBoardCard('${state.currentWorkspace}','${page.id}','${list.id}')" class="w-full text-left px-3 py-2 rounded-lg text-sm text-gray-400 hover:bg-gray-200 dark:hover:bg-lp-darkBorder transition-colors flex items-center gap-2"><i class="fas fa-plus text-xs"></i>Add card</button>
+        </div>
+    </div>`;
+}
+
+function renderBoardCard(card, listId, page) {
+    const priorityClass = card.priority ? `priority-${card.priority}` : 'priority-none';
+    return `
+    <div class="card-item bg-white dark:bg-lp-darkCard rounded-lg shadow-sm border border-gray-200/60 dark:border-lp-darkBorder overflow-hidden ${priorityClass}" data-card-id="${card.id}" onclick="showCardDetail('${state.currentWorkspace}','${page.id}','${listId}','${card.id}')">
+        ${card.cover ? `<div class="card-cover" style="background:${card.cover}"></div>` : ''}
+        <div class="p-3">
+            ${(card.labels && card.labels.length) ? `<div class="flex flex-wrap gap-1 mb-2">${card.labels.map(l => { const lc = LABEL_COLORS.find(c => c.name === l) || LABEL_COLORS[0]; return `<span class="tag" style="background:${lc.bg};color:${lc.color}">${l}</span>`; }).join('')}</div>` : ''}
+            <div class="text-sm font-medium dark:text-white mb-1">${card.title}</div>
+            ${card.description ? `<div class="text-xs text-gray-400 mb-2 line-clamp-2">${card.description}</div>` : ''}
+            <div class="flex items-center gap-2 flex-wrap">
+                ${card.due ? `<span class="text-[10px] ${isOverdue(card.due) ? 'text-red-500 bg-red-50 dark:bg-red-900/20' : 'text-gray-400 bg-gray-100 dark:bg-lp-darkBorder'} px-1.5 py-0.5 rounded"><i class="fas fa-calendar text-[8px] mr-1"></i>${card.due}</span>` : ''}
+                ${card.checklist && card.checklist.length ? `<span class="text-[10px] text-gray-400 bg-gray-100 dark:bg-lp-darkBorder px-1.5 py-0.5 rounded"><i class="fas fa-check-square text-[8px] mr-1"></i>${card.checklist.filter(c => c.done).length}/${card.checklist.length}</span>` : ''}
+                ${card.comments && card.comments.length ? `<span class="text-[10px] text-gray-400"><i class="fas fa-comment text-[8px] mr-1"></i>${card.comments.length}</span>` : ''}
+                ${card.assignee ? `<span class="text-[10px] text-lp-purple bg-lp-purple/10 px-1.5 py-0.5 rounded font-medium">${card.assignee}</span>` : ''}
+            </div>
+        </div>
+    </div>`;
+}
+
+// =====================================================================
+// BOARD INTERACTIONS
+// =====================================================================
+function initBoardSortable(page) {
+    document.querySelectorAll('.card-list').forEach(el => {
+        new Sortable(el, {
+            group: 'cards', animation: 200, ghostClass: 'sortable-ghost', chosenClass: 'sortable-chosen', handle: '.card-item',
+            onEnd: function(evt) {
+                const board = page.board;
+                const fromList = board.lists.find(l => l.id === evt.from.dataset.listId);
+                const toList = board.lists.find(l => l.id === evt.to.dataset.listId);
+                if (fromList && toList) {
+                    const card = fromList.cards.splice(evt.oldIndex, 1)[0];
+                    toList.cards.splice(evt.newIndex, 0, card);
+                    page.updatedAt = Date.now();
+                    state.save();
+                    state.addActivity(`Moved card "${card.title}"`, 'fa-arrows-alt');
+                }
+            }
+        });
+    });
+}
+
+function addBoardList(wsId, pgId) {
+    const page = state.getPage(wsId, pgId);
+    if (!page || !page.board) return;
+    const title = prompt('List name:');
+    if (!title) return;
+    page.board.lists.push({ id: state.uid(), title, cards: [], wipLimit: 0 });
+    page.updatedAt = Date.now();
+    state.save();
+    state.addActivity(`Added list "${title}"`, 'fa-columns');
+    render();
+}
+
+function addBoardCard(wsId, pgId, listId) {
+    const page = state.getPage(wsId, pgId);
+    if (!page || !page.board) return;
+    const list = page.board.lists.find(l => l.id === listId);
+    if (!list) return;
+    const title = prompt('Card title:');
+    if (!title) return;
+    list.cards.push({ id: state.uid(), title, description: '', labels: [], priority: 'none', due: '', checklist: [], comments: [], assignee: '', cover: '', activity: [{ text: 'Card created', time: Date.now() }] });
+    page.updatedAt = Date.now();
+    state.save();
+    state.addActivity(`Added card "${title}"`, 'fa-plus');
+    render();
+}
+
+function updateListTitle(el, wsId, pgId, listId) {
+    const page = state.getPage(wsId, pgId);
+    if (!page || !page.board) return;
+    const list = page.board.lists.find(l => l.id === listId);
+    if (list) { list.title = el.textContent.trim(); state.save(); }
+}
+
+function showListMenu(event, wsId, pgId, listId) {
+    event.stopPropagation();
+    removeContextMenus();
+    const page = state.getPage(wsId, pgId);
+    const list = page?.board?.lists?.find(l => l.id === listId);
+    if (!list) return;
+    const menu = document.createElement('div');
+    menu.className = 'fixed z-50 bg-white dark:bg-lp-darkCard rounded-xl shadow-xl border border-gray-200 dark:border-lp-darkBorder py-1 w-48 fade-in context-menu';
+    menu.style.top = event.clientY + 'px';
+    menu.style.left = event.clientX + 'px';
+    menu.innerHTML = `
+        <button class="w-full text-left px-3 py-2 text-sm hover:bg-gray-50 dark:hover:bg-lp-darkBorder flex items-center gap-2" onclick="setWipLimit('${wsId}','${pgId}','${listId}')"><i class="fas fa-tachometer-alt text-xs text-gray-400 w-5"></i>Set WIP Limit</button>
+        <button class="w-full text-left px-3 py-2 text-sm hover:bg-gray-50 dark:hover:bg-lp-darkBorder flex items-center gap-2 text-red-500" onclick="deleteBoardList('${wsId}','${pgId}','${listId}')"><i class="fas fa-trash text-xs w-5"></i>Delete List</button>
+    `;
+    document.body.appendChild(menu);
+    setTimeout(() => document.addEventListener('click', function h() { menu.remove(); document.removeEventListener('click', h); }), 10);
+}
+
+function setWipLimit(wsId, pgId, listId) {
+    removeContextMenus();
+    const page = state.getPage(wsId, pgId);
+    const list = page?.board?.lists?.find(l => l.id === listId);
+    if (!list) return;
+    const val = prompt('WIP Limit (0 for no limit):', list.wipLimit || 0);
+    if (val !== null) { list.wipLimit = parseInt(val) || 0; state.save(); render(); }
+}
+
+function deleteBoardList(wsId, pgId, listId) {
+    removeContextMenus();
+    if (!confirm('Delete this list and all its cards?')) return;
+    const page = state.getPage(wsId, pgId);
+    if (!page || !page.board) return;
+    page.board.lists = page.board.lists.filter(l => l.id !== listId);
+    state.save(); render();
+}
+
+function filterBoardCards() {
+    const q = document.getElementById('boardSearchInput')?.value?.toLowerCase() || '';
+    document.querySelectorAll('.card-item').forEach(el => {
+        const text = el.textContent.toLowerCase();
+        el.style.display = text.includes(q) ? '' : 'none';
+    });
+}
+
+// =====================================================================
+// CARD DETAIL MODAL
+// =====================================================================
+function showCardDetail(wsId, pgId, listId, cardId) {
+    const page = state.getPage(wsId, pgId);
+    const list = page?.board?.lists?.find(l => l.id === listId);
+    const card = list?.cards?.find(c => c.id === cardId);
+    if (!card) return;
+    const overlay = document.getElementById('modalOverlay');
+    const content = document.getElementById('modalContent');
+    content.className = 'bg-white dark:bg-lp-darkCard rounded-xl shadow-2xl max-h-[90vh] overflow-auto w-full max-w-2xl border border-gray-200 dark:border-lp-darkBorder fade-in';
+    content.innerHTML = `
+    <div>
+        ${card.cover ? `<div class="h-24 rounded-t-xl" style="background:${card.cover}"></div>` : ''}
+        <div class="p-6">
+            <div class="flex items-start justify-between mb-4">
+                <div class="flex-1">
+                    <input type="text" value="${card.title}" class="text-xl font-bold w-full outline-none bg-transparent dark:text-white" onchange="updateCardField('${wsId}','${pgId}','${listId}','${cardId}','title',this.value)">
+                    <p class="text-xs text-gray-400 mt-1">in list <strong>${list.title}</strong></p>
+                </div>
+                <button onclick="document.getElementById('modalOverlay').classList.add('hidden')" class="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-100 dark:hover:bg-lp-darkBorder text-gray-400"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="grid grid-cols-3 gap-6">
+                <div class="col-span-2 space-y-4">
+                    <!-- Labels -->
+                    <div>
+                        <h4 class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Labels</h4>
+                        <div class="flex flex-wrap gap-1.5">${LABEL_COLORS.map(l => `<button onclick="toggleCardLabel('${wsId}','${pgId}','${listId}','${cardId}','${l.name}')" class="tag ${(card.labels || []).includes(l.name) ? '' : 'opacity-40'}" style="background:${l.bg};color:${l.color}">${l.name}</button>`).join('')}</div>
+                    </div>
+                    <!-- Description -->
+                    <div>
+                        <h4 class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Description</h4>
+                        <textarea class="w-full bg-gray-100 dark:bg-lp-darkBg rounded-lg p-3 text-sm outline-none resize-none h-24 dark:text-lp-darkText" placeholder="Add a description..." onchange="updateCardField('${wsId}','${pgId}','${listId}','${cardId}','description',this.value)">${card.description || ''}</textarea>
+                    </div>
+                    <!-- Checklist -->
+                    <div>
+                        <h4 class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Checklist</h4>
+                        ${card.checklist && card.checklist.length ? `<div class="progress-bar mb-2"><div class="progress-fill bg-green-500" style="width:${Math.round(card.checklist.filter(c=>c.done).length/card.checklist.length*100)}%"></div></div>` : ''}
+                        <div class="space-y-1.5">${(card.checklist || []).map((ci, ii) => `<div class="checklist-item flex items-center gap-2 ${ci.done ? 'done' : ''}"><input type="checkbox" ${ci.done ? 'checked' : ''} onchange="toggleCardCheckItem('${wsId}','${pgId}','${listId}','${cardId}',${ii})" class="w-4 h-4 rounded border-gray-300 text-lp-purple cursor-pointer"><span class="cl-text text-sm dark:text-gray-300">${ci.text}</span><button onclick="deleteCardCheckItem('${wsId}','${pgId}','${listId}','${cardId}',${ii})" class="text-gray-300 hover:text-red-400 ml-auto"><i class="fas fa-times text-[10px]"></i></button></div>`).join('')}</div>
+                        <button onclick="addCardCheckItem('${wsId}','${pgId}','${listId}','${cardId}')" class="text-xs text-gray-400 hover:text-lp-purple mt-2"><i class="fas fa-plus text-[9px] mr-1"></i>Add item</button>
+                    </div>
+                    <!-- Comments -->
+                    <div>
+                        <h4 class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Comments</h4>
+                        <div class="space-y-2">${(card.comments || []).map(c => `<div class="flex items-start gap-2"><div class="w-6 h-6 bg-lp-purple rounded-full flex items-center justify-center text-white text-[9px] font-bold flex-shrink-0">${state.profile.initials}</div><div class="bg-gray-100 dark:bg-lp-darkBg rounded-lg px-3 py-2 flex-1"><p class="text-sm dark:text-gray-300">${c.text}</p><p class="text-[10px] text-gray-400 mt-1">${timeAgo(c.time)}</p></div></div>`).join('')}</div>
+                        <div class="flex items-center gap-2 mt-2"><input type="text" id="cardCommentInput" placeholder="Add comment..." class="flex-1 bg-gray-100 dark:bg-lp-darkBg rounded-lg px-3 py-2 text-sm outline-none dark:text-lp-darkText" onkeydown="if(event.key==='Enter')addCardComment('${wsId}','${pgId}','${listId}','${cardId}')"><button onclick="addCardComment('${wsId}','${pgId}','${listId}','${cardId}')" class="bg-lp-purple text-white rounded-lg px-3 py-2 text-xs font-medium hover:bg-indigo-600">Send</button></div>
+                    </div>
+                    <!-- Activity -->
+                    <div>
+                        <h4 class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Activity</h4>
+                        <div class="space-y-1.5">${(card.activity || []).map(a => `<div class="text-xs text-gray-400"><i class="fas fa-circle text-[4px] mr-2 align-middle"></i>${a.text} · ${timeAgo(a.time)}</div>`).join('')}</div>
+                    </div>
+                </div>
+                <!-- Sidebar -->
+                <div class="space-y-3">
+                    <div>
+                        <h4 class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Assignee</h4>
+                        <input type="text" value="${card.assignee || ''}" placeholder="Assign to..." class="w-full bg-gray-100 dark:bg-lp-darkBg rounded-lg px-3 py-2 text-sm outline-none dark:text-lp-darkText" onchange="updateCardField('${wsId}','${pgId}','${listId}','${cardId}','assignee',this.value)">
+                    </div>
+                    <div>
+                        <h4 class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Priority</h4>
+                        <select onchange="updateCardField('${wsId}','${pgId}','${listId}','${cardId}','priority',this.value)" class="w-full bg-gray-100 dark:bg-lp-darkBg rounded-lg px-3 py-2 text-sm outline-none dark:text-lp-darkText">${PRIORITIES.map(p => `<option value="${p.value}" ${card.priority === p.value ? 'selected' : ''}>${p.icon} ${p.name}</option>`).join('')}</select>
+                    </div>
+                    <div>
+                        <h4 class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Due Date</h4>
+                        <input type="date" value="${card.due || ''}" class="w-full bg-gray-100 dark:bg-lp-darkBg rounded-lg px-3 py-2 text-sm outline-none dark:text-lp-darkText" onchange="updateCardField('${wsId}','${pgId}','${listId}','${cardId}','due',this.value)">
+                    </div>
+                    <div>
+                        <h4 class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Cover</h4>
+                        <div class="grid grid-cols-3 gap-1.5">${['linear-gradient(135deg,#6264A7,#4F6BED)','linear-gradient(135deg,#22C55E,#0EA5E9)','linear-gradient(135deg,#F59E0B,#EF4444)','linear-gradient(135deg,#EC4899,#8B5CF6)','linear-gradient(135deg,#14B8A6,#6264A7)',''].map(c => `<button onclick="updateCardField('${wsId}','${pgId}','${listId}','${cardId}','cover','${c}')" class="h-8 rounded-lg border ${card.cover === c ? 'border-lp-purple ring-2 ring-lp-purple/30' : 'border-gray-200 dark:border-lp-darkBorder'}" style="background:${c || '#f3f4f6'}">${!c ? '<i class="fas fa-times text-gray-400 text-xs"></i>' : ''}</button>`).join('')}</div>
+                    </div>
+                    <div>
+                        <h4 class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Move to</h4>
+                        <select onchange="moveCard('${wsId}','${pgId}','${listId}','${cardId}',this.value)" class="w-full bg-gray-100 dark:bg-lp-darkBg rounded-lg px-3 py-2 text-sm outline-none dark:text-lp-darkText">
+                            <option value="">Select list...</option>
+                            ${page.board.lists.filter(l => l.id !== listId).map(l => `<option value="${l.id}">${l.title}</option>`).join('')}
+                        </select>
+                    </div>
+                    <button onclick="if(confirm('Delete this card?')){deleteCard('${wsId}','${pgId}','${listId}','${cardId}')}" class="w-full bg-red-50 dark:bg-red-900/20 text-red-500 rounded-lg py-2 text-sm font-medium hover:bg-red-100 dark:hover:bg-red-900/30 transition-colors"><i class="fas fa-trash mr-1"></i>Delete Card</button>
+                </div>
+            </div>
+        </div>
+    </div>`;
+    overlay.classList.remove('hidden');
+    overlay.onclick = (e) => { if (e.target === overlay) overlay.classList.add('hidden'); };
+}
+
+// =====================================================================
+// CARD OPERATIONS
+// =====================================================================
+function updateCardField(wsId, pgId, listId, cardId, field, value) {
+    const page = state.getPage(wsId, pgId);
+    const list = page?.board?.lists?.find(l => l.id === listId);
+    const card = list?.cards?.find(c => c.id === cardId);
+    if (card) { card[field] = value; if (!card.activity) card.activity = []; card.activity.unshift({ text: `Updated ${field}`, time: Date.now() }); page.updatedAt = Date.now(); state.save(); }
+}
+function toggleCardLabel(wsId, pgId, listId, cardId, label) {
+    const page = state.getPage(wsId, pgId);
+    const list = page?.board?.lists?.find(l => l.id === listId);
+    const card = list?.cards?.find(c => c.id === cardId);
+    if (!card) return;
+    if (!card.labels) card.labels = [];
+    const idx = card.labels.indexOf(label);
+    if (idx >= 0) card.labels.splice(idx, 1); else card.labels.push(label);
+    state.save();
+    showCardDetail(wsId, pgId, listId, cardId);
+}
+function toggleCardCheckItem(wsId, pgId, listId, cardId, idx) {
+    const page = state.getPage(wsId, pgId);
+    const list = page?.board?.lists?.find(l => l.id === listId);
+    const card = list?.cards?.find(c => c.id === cardId);
+    if (card && card.checklist[idx]) { card.checklist[idx].done = !card.checklist[idx].done; state.save(); showCardDetail(wsId, pgId, listId, cardId); }
+}
+function addCardCheckItem(wsId, pgId, listId, cardId) {
+    const text = prompt('Checklist item:');
+    if (!text) return;
+    const page = state.getPage(wsId, pgId);
+    const list = page?.board?.lists?.find(l => l.id === listId);
+    const card = list?.cards?.find(c => c.id === cardId);
+    if (card) { if (!card.checklist) card.checklist = []; card.checklist.push({ text, done: false }); state.save(); showCardDetail(wsId, pgId, listId, cardId); }
+}
+function deleteCardCheckItem(wsId, pgId, listId, cardId, idx) {
+    const page = state.getPage(wsId, pgId);
+    const list = page?.board?.lists?.find(l => l.id === listId);
+    const card = list?.cards?.find(c => c.id === cardId);
+    if (card) { card.checklist.splice(idx, 1); state.save(); showCardDetail(wsId, pgId, listId, cardId); }
+}
+function addCardComment(wsId, pgId, listId, cardId) {
+    const input = document.getElementById('cardCommentInput');
+    if (!input || !input.value.trim()) return;
+    const page = state.getPage(wsId, pgId);
+    const list = page?.board?.lists?.find(l => l.id === listId);
+    const card = list?.cards?.find(c => c.id === cardId);
+    if (card) { if (!card.comments) card.comments = []; card.comments.push({ text: input.value.trim(), time: Date.now(), author: state.profile.name }); if (!card.activity) card.activity = []; card.activity.unshift({ text: 'Added a comment', time: Date.now() }); state.save(); showCardDetail(wsId, pgId, listId, cardId); }
+}
+function moveCard(wsId, pgId, fromListId, cardId, toListId) {
+    if (!toListId) return;
+    const page = state.getPage(wsId, pgId);
+    const fromList = page?.board?.lists?.find(l => l.id === fromListId);
+    const toList = page?.board?.lists?.find(l => l.id === toListId);
+    if (!fromList || !toList) return;
+    const idx = fromList.cards.findIndex(c => c.id === cardId);
+    if (idx === -1) return;
+    const card = fromList.cards.splice(idx, 1)[0];
+    toList.cards.push(card);
+    state.save();
+    document.getElementById('modalOverlay').classList.add('hidden');
+    render();
+}
+function deleteCard(wsId, pgId, listId, cardId) {
+    const page = state.getPage(wsId, pgId);
+    const list = page?.board?.lists?.find(l => l.id === listId);
+    if (list) { list.cards = list.cards.filter(c => c.id !== cardId); state.save(); document.getElementById('modalOverlay').classList.add('hidden'); render(); }
+}
+
+// =====================================================================
+// BLOCK OPERATIONS
+// =====================================================================
+function initBlockEditors(page) {
+    document.querySelectorAll('[data-block-idx][data-field]').forEach(el => {
+        el.addEventListener('input', () => {
+            const idx = parseInt(el.dataset.blockIdx);
+            const field = el.dataset.field;
+            if (page.blocks[idx]) { page.blocks[idx][field] = el.innerHTML; page.updatedAt = Date.now(); state.save(); }
+        });
+        el.addEventListener('keydown', (e) => {
+            if (e.key === '/' && el.textContent.trim() === '') { e.preventDefault(); showSlashMenu(el, el.getBoundingClientRect()); }
+        });
+    });
+    document.querySelectorAll('[data-block-idx][data-item-idx]').forEach(el => {
+        el.addEventListener('input', () => {
+            const idx = parseInt(el.dataset.blockIdx);
+            const ii = parseInt(el.dataset.itemIdx);
+            const type = el.dataset.listType;
+            const block = page.blocks[idx];
+            if (!block) return;
+            if (type === 'bullet' || type === 'numbered') { block.items[ii] = el.textContent; }
+            else if (type === 'checklist') { block.items[ii].text = el.textContent; }
+            else if (type === 'task') { block.items[ii].text = el.textContent; }
+            else if (type === 'voting') { block.items[ii].text = el.textContent; }
+            else if (type === 'status') { block.items[ii].name = el.textContent; }
+            page.updatedAt = Date.now(); state.save();
+        });
+    });
+    document.querySelectorAll('[data-block-idx][data-header-idx]').forEach(el => {
+        el.addEventListener('input', () => {
+            const idx = parseInt(el.dataset.blockIdx);
+            const hi = parseInt(el.dataset.headerIdx);
+            if (page.blocks[idx]) { page.blocks[idx].headers[hi] = el.textContent; state.save(); }
+        });
+    });
+    document.querySelectorAll('[data-block-idx][data-row-idx]').forEach(el => {
+        el.addEventListener('input', () => {
+            const idx = parseInt(el.dataset.blockIdx);
+            const ri = parseInt(el.dataset.rowIdx);
+            const ci = parseInt(el.dataset.colIdx);
+            if (page.blocks[idx]) { page.blocks[idx].rows[ri][ci] = el.textContent; state.save(); }
+        });
+    });
+}
+
+function deleteBlock(wsId, pgId, idx) {
+    const page = state.getPage(wsId, pgId);
+    if (page && page.blocks) { page.blocks.splice(idx, 1); page.updatedAt = Date.now(); state.save(); renderPageEditor(page); }
+}
+function addBlockAtEnd(type) {
+    const page = state.getPage(state.currentWorkspace, state.currentPage);
+    if (!page) return;
+    const block = createBlockFromCommand(type);
+    if (block) { if (!page.blocks) page.blocks = []; page.blocks.push(block); page.updatedAt = Date.now(); state.save(); renderPageEditor(page); }
+}
+function showSlashMenuAtEnd() {
+    const container = document.getElementById('blocksContainer');
+    if (container) { const rect = container.getBoundingClientRect(); showSlashMenu(container, { bottom: rect.bottom, left: rect.left + 28 }); }
+}
+function renderPageEditor(page) { renderPage(document.getElementById('mainContent')); }
+
+// Block-specific operations
+function toggleCheckItem(wsId, pgId, bIdx, iIdx) { const p = state.getPage(wsId, pgId); if (p?.blocks[bIdx]?.items[iIdx]) { p.blocks[bIdx].items[iIdx].done = !p.blocks[bIdx].items[iIdx].done; state.save(); renderPageEditor(p); } }
+function addCheckItem(wsId, pgId, bIdx) { const p = state.getPage(wsId, pgId); if (p?.blocks[bIdx]) { p.blocks[bIdx].items.push({ text: '', done: false }); state.save(); renderPageEditor(p); } }
+function addListItem(wsId, pgId, bIdx) { const p = state.getPage(wsId, pgId); if (p?.blocks[bIdx]) { p.blocks[bIdx].items.push(''); state.save(); renderPageEditor(p); } }
+function addTaskItem(wsId, pgId, bIdx) { const p = state.getPage(wsId, pgId); if (p?.blocks[bIdx]) { p.blocks[bIdx].items.push({ text: '', status: 'not_started', assignee: '', due: '', priority: 'none' }); state.save(); renderPageEditor(p); } }
+function updateTaskStatus(wsId, pgId, bIdx, iIdx, val) { const p = state.getPage(wsId, pgId); if (p?.blocks[bIdx]?.items[iIdx]) { p.blocks[bIdx].items[iIdx].status = val; state.save(); renderPageEditor(p); } }
+function updateTaskPriority(wsId, pgId, bIdx, iIdx, val) { const p = state.getPage(wsId, pgId); if (p?.blocks[bIdx]?.items[iIdx]) { p.blocks[bIdx].items[iIdx].priority = val; state.save(); } }
+function updateTaskDue(wsId, pgId, bIdx, iIdx, val) { const p = state.getPage(wsId, pgId); if (p?.blocks[bIdx]?.items[iIdx]) { p.blocks[bIdx].items[iIdx].due = val; state.save(); } }
+function updateTaskAssignee(wsId, pgId, bIdx, iIdx, val) { const p = state.getPage(wsId, pgId); if (p?.blocks[bIdx]?.items[iIdx]) { p.blocks[bIdx].items[iIdx].assignee = val; state.save(); } }
+function toggleToggle(wsId, pgId, bIdx) { const p = state.getPage(wsId, pgId); if (p?.blocks[bIdx]) { p.blocks[bIdx].open = !p.blocks[bIdx].open; state.save(); renderPageEditor(p); } }
+function updateProgress(wsId, pgId, bIdx, val) { const p = state.getPage(wsId, pgId); if (p?.blocks[bIdx]) { p.blocks[bIdx].value = parseInt(val); state.save(); const fill = document.querySelector(`[data-block-index="${bIdx}"] .progress-fill`); if (fill) fill.style.width = val + '%'; const span = document.querySelector(`[data-block-index="${bIdx}"] .text-lp-purple`); if (span) span.textContent = val + '%'; } }
+function vote(wsId, pgId, bIdx, iIdx, delta) { const p = state.getPage(wsId, pgId); if (p?.blocks[bIdx]?.items[iIdx]) { p.blocks[bIdx].items[iIdx].votes = (p.blocks[bIdx].items[iIdx].votes || 0) + delta; state.save(); renderPageEditor(p); } }
+function addVoteItem(wsId, pgId, bIdx) { const p = state.getPage(wsId, pgId); if (p?.blocks[bIdx]) { p.blocks[bIdx].items.push({ text: '', votes: 0 }); state.save(); renderPageEditor(p); } }
+function updateStatusItem(wsId, pgId, bIdx, iIdx, val) { const p = state.getPage(wsId, pgId); if (p?.blocks[bIdx]?.items[iIdx]) { p.blocks[bIdx].items[iIdx].status = val; state.save(); } }
+function addStatusItem(wsId, pgId, bIdx) { const p = state.getPage(wsId, pgId); if (p?.blocks[bIdx]) { p.blocks[bIdx].items.push({ name: '', status: 'not_started' }); state.save(); renderPageEditor(p); } }
+function addTableRow(wsId, pgId, bIdx) { const p = state.getPage(wsId, pgId); if (p?.blocks[bIdx]) { p.blocks[bIdx].rows.push(new Array(p.blocks[bIdx].headers.length).fill('')); state.save(); renderPageEditor(p); } }
+function addTableColumn(wsId, pgId, bIdx) { const p = state.getPage(wsId, pgId); if (p?.blocks[bIdx]) { p.blocks[bIdx].headers.push('New Column'); p.blocks[bIdx].rows.forEach(r => r.push('')); state.save(); renderPageEditor(p); } }
+function setImageUrl(bIdx, wsId, pgId) { const url = prompt('Image URL:'); if (url) { const p = state.getPage(wsId, pgId); if (p?.blocks[bIdx]) { p.blocks[bIdx].url = url; state.save(); renderPageEditor(p); } } }
+function setLinkEmbed(bIdx, wsId, pgId) { const url = prompt('Link URL:'); if (url) { const p = state.getPage(wsId, pgId); if (p?.blocks[bIdx]) { p.blocks[bIdx].url = url; p.blocks[bIdx].title = url; state.save(); renderPageEditor(p); } } }
+
+// =====================================================================
+// PAGE OPERATIONS
+// =====================================================================
+function updatePageTitle(el, wsId, pgId) { const p = state.getPage(wsId, pgId); if (p) { p.name = el.textContent.trim() || 'Untitled'; p.updatedAt = Date.now(); state.save(); renderSidebar(); } }
+function togglePageFavorite(wsId, pgId) { const p = state.getPage(wsId, pgId); if (p) { p.isFavorite = !p.isFavorite; state.save(); render(); } }
+function toggleWSFavorite(wsId) { const ws = state.getWorkspace(wsId); if (ws) { ws.isFavorite = !ws.isFavorite; state.save(); render(); } }
+function togglePageLock(wsId, pgId) { const p = state.getPage(wsId, pgId); if (p) { p.locked = !p.locked; state.save(); render(); } }
+function addCover(wsId, pgId) { const p = state.getPage(wsId, pgId); if (p) { p.cover = COVERS[Math.floor(Math.random() * COVERS.length)]; state.save(); render(); } }
+function changeCover(wsId, pgId) { const p = state.getPage(wsId, pgId); if (p) { const idx = COVERS.indexOf(p.cover); p.cover = COVERS[(idx + 1) % COVERS.length]; state.save(); render(); } }
+
+function addPageTag(wsId, pgId) {
+    const name = prompt('Tag name:');
+    if (!name) return;
+    const p = state.getPage(wsId, pgId);
+    if (!p) return;
+    if (!p.tags) p.tags = [];
+    const lc = LABEL_COLORS[p.tags.length % LABEL_COLORS.length];
+    p.tags.push({ name, color: lc.color, bg: lc.bg });
+    state.save(); render();
+}
+function removePageTag(wsId, pgId, tagName) { const p = state.getPage(wsId, pgId); if (p) { p.tags = (p.tags || []).filter(t => t.name !== tagName); state.save(); render(); } }
+
+function renderReactions(reactions) {
+    const emojis = ['👍','❤️','🎉','🤔','👀','🚀'];
+    return emojis.filter(e => reactions[e]).map(e => `<button onclick="toggleReaction('${e}')" class="reaction-btn ${reactions[e] ? 'active' : ''}">${e} ${reactions[e] || ''}</button>`).join('');
+}
+function addReaction(wsId, pgId) {
+    const emojis = ['👍','❤️','🎉','🤔','👀','🚀'];
+    const emoji = emojis[Math.floor(Math.random() * emojis.length)];
+    const p = state.getPage(wsId, pgId);
+    if (!p) return;
+    if (!p.reactions) p.reactions = {};
+    p.reactions[emoji] = (p.reactions[emoji] || 0) + 1;
+    state.save(); render();
+}
+
+function renderComments(comments) {
+    if (!comments.length) return '<p class="text-sm text-gray-400">No comments yet.</p>';
+    return comments.map(c => `<div class="flex items-start gap-3 mb-3"><div class="w-7 h-7 bg-lp-purple rounded-full flex items-center justify-center text-white text-[10px] font-bold flex-shrink-0">${state.profile.initials}</div><div class="bg-gray-100 dark:bg-lp-darkBg rounded-lg px-3 py-2 flex-1"><p class="text-sm dark:text-gray-300">${c.text}</p><p class="text-[10px] text-gray-400 mt-1">${timeAgo(c.time)}</p></div></div>`).join('');
+}
+function addComment(wsId, pgId) {
+    const input = document.getElementById('commentInput');
+    if (!input || !input.value.trim()) return;
+    const p = state.getPage(wsId, pgId);
+    if (!p) return;
+    if (!p.comments) p.comments = [];
+    p.comments.push({ text: input.value.trim(), time: Date.now(), author: state.profile.name });
+    state.addNotification(`New comment on "${p.name}"`, 'fa-comment');
+    state.save(); render();
+}
+
+function showPageMenu(event, wsId, pgId) {
+    event.stopPropagation();
+    removeContextMenus();
+    const page = state.getPage(wsId, pgId);
+    if (!page) return;
+    const menu = document.createElement('div');
+    menu.className = 'fixed z-50 bg-white dark:bg-lp-darkCard rounded-xl shadow-xl border border-gray-200 dark:border-lp-darkBorder py-1 w-52 fade-in context-menu';
+    menu.style.top = event.clientY + 'px';
+    menu.style.left = Math.min(event.clientX, window.innerWidth - 220) + 'px';
+    menu.innerHTML = `
+        <button class="w-full text-left px-3 py-2 text-sm hover:bg-gray-50 dark:hover:bg-lp-darkBorder flex items-center gap-2" onclick="togglePageFavorite('${wsId}','${pgId}');removeContextMenus()"><i class="fas fa-star text-xs text-gray-400 w-5"></i>${page.isFavorite ? 'Remove from Favorites' : 'Add to Favorites'}</button>
+        <button class="w-full text-left px-3 py-2 text-sm hover:bg-gray-50 dark:hover:bg-lp-darkBorder flex items-center gap-2" onclick="duplicatePage('${wsId}','${pgId}');removeContextMenus()"><i class="fas fa-copy text-xs text-gray-400 w-5"></i>Duplicate</button>
+        <button class="w-full text-left px-3 py-2 text-sm hover:bg-gray-50 dark:hover:bg-lp-darkBorder flex items-center gap-2" onclick="exportPageContent('${wsId}','${pgId}');removeContextMenus()"><i class="fas fa-file-export text-xs text-gray-400 w-5"></i>Export</button>
+        <button class="w-full text-left px-3 py-2 text-sm hover:bg-gray-50 dark:hover:bg-lp-darkBorder flex items-center gap-2" onclick="togglePageLock('${wsId}','${pgId}');removeContextMenus()"><i class="fas fa-lock text-xs text-gray-400 w-5"></i>${page.locked ? 'Unlock Page' : 'Lock Page'}</button>
+        <hr class="my-1 border-gray-100 dark:border-lp-darkBorder">
+        <button class="w-full text-left px-3 py-2 text-sm hover:bg-gray-50 dark:hover:bg-lp-darkBorder flex items-center gap-2 text-red-500" onclick="state.deletePage('${wsId}','${pgId}');state.currentView='workspace';state.currentPage=null;render();removeContextMenus()"><i class="fas fa-trash text-xs w-5"></i>Delete</button>
+    `;
+    document.body.appendChild(menu);
+    setTimeout(() => document.addEventListener('click', function h() { menu.remove(); document.removeEventListener('click', h); }), 10);
+}
+
+function duplicatePage(wsId, pgId) {
+    const ws = state.getWorkspace(wsId);
+    const page = state.getPage(wsId, pgId);
+    if (!ws || !page) return;
+    const dup = JSON.parse(JSON.stringify(page));
+    dup.id = state.uid();
+    dup.name = page.name + ' (copy)';
+    dup.createdAt = Date.now();
+    dup.updatedAt = Date.now();
+    ws.pages.push(dup);
+    state.addActivity(`Duplicated page "${page.name}"`, 'fa-copy');
+    state.save(); render();
+}
+
+function exportPageContent(wsId, pgId) {
+    const page = state.getPage(wsId, pgId);
+    if (!page) return;
+    const blob = new Blob([JSON.stringify(page, null, 2)], { type: 'application/json' });
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `${page.name}.json`; a.click();
+}
+
+function showPageEmojiPicker(event, wsId, pgId) {
+    event.stopPropagation();
+    removeContextMenus();
+    const picker = document.createElement('div');
+    picker.className = 'fixed z-50 bg-white dark:bg-lp-darkCard rounded-xl shadow-xl border border-gray-200 dark:border-lp-darkBorder p-3 w-64 fade-in context-menu';
+    picker.style.top = event.clientY + 'px';
+    picker.style.left = event.clientX + 'px';
+    picker.innerHTML = `<div class="flex flex-wrap gap-1">${EMOJIS.map(e => `<button class="w-8 h-8 flex items-center justify-center rounded hover:bg-gray-100 dark:hover:bg-lp-darkBorder text-lg ep-btn">${e}</button>`).join('')}</div>`;
+    document.body.appendChild(picker);
+    picker.querySelectorAll('.ep-btn').forEach(btn => {
+        btn.addEventListener('click', () => { const p = state.getPage(wsId, pgId); if (p) { p.emoji = btn.textContent.trim(); state.save(); render(); } picker.remove(); });
+    });
+    setTimeout(() => document.addEventListener('click', function h(e) { if (!picker.contains(e.target)) { picker.remove(); document.removeEventListener('click', h); } }), 10);
+}
+
+// =====================================================================
+// WORKSPACE CONTEXT MENU
+// =====================================================================
+function showWSContextMenu(wsId, event) {
+    event.stopPropagation();
+    removeContextMenus();
+    const ws = state.getWorkspace(wsId);
+    if (!ws) return;
+    const menu = document.createElement('div');
+    menu.className = 'fixed z-50 bg-white dark:bg-lp-darkCard rounded-xl shadow-xl border border-gray-200 dark:border-lp-darkBorder py-1 w-48 fade-in context-menu';
+    menu.style.top = event.clientY + 'px';
+    menu.style.left = Math.min(event.clientX, window.innerWidth - 200) + 'px';
+    menu.innerHTML = `
+        <button class="w-full text-left px-3 py-2 text-sm hover:bg-gray-50 dark:hover:bg-lp-darkBorder flex items-center gap-2" onclick="renameWorkspace('${wsId}');removeContextMenus()"><i class="fas fa-pen text-xs text-gray-400 w-5"></i>Rename</button>
+        <button class="w-full text-left px-3 py-2 text-sm hover:bg-gray-50 dark:hover:bg-lp-darkBorder flex items-center gap-2" onclick="toggleWSFavorite('${wsId}');removeContextMenus()"><i class="fas fa-star text-xs text-gray-400 w-5"></i>${ws.isFavorite ? 'Unfavorite' : 'Favorite'}</button>
+        <hr class="my-1 border-gray-100 dark:border-lp-darkBorder">
+        <button class="w-full text-left px-3 py-2 text-sm hover:bg-gray-50 dark:hover:bg-lp-darkBorder flex items-center gap-2 text-red-500" onclick="deleteWorkspace('${wsId}');removeContextMenus()"><i class="fas fa-trash text-xs w-5"></i>Delete</button>
+    `;
+    document.body.appendChild(menu);
+    setTimeout(() => document.addEventListener('click', function h() { menu.remove(); document.removeEventListener('click', h); }), 10);
+}
+function renameWorkspace(wsId) { const ws = state.getWorkspace(wsId); if (!ws) return; const name = prompt('Rename workspace:', ws.name); if (name) { ws.name = name; state.save(); render(); } }
+function deleteWorkspace(wsId) { if (!confirm('Delete this workspace and all its pages?')) return; state.workspaces = state.workspaces.filter(w => w.id !== wsId); if (state.currentWorkspace === wsId) { state.currentView = 'home'; state.currentWorkspace = null; state.currentPage = null; } state.save(); render(); }
+function removeContextMenus() { document.querySelectorAll('.context-menu').forEach(m => m.remove()); }
+
+// =====================================================================
+// CREATE MODALS
+// =====================================================================
+function showCreateModal() {
+    const overlay = document.getElementById('modalOverlay');
+    const content = document.getElementById('modalContent');
+    content.className = 'bg-white dark:bg-lp-darkCard rounded-xl shadow-2xl max-h-[90vh] overflow-auto w-full max-w-md border border-gray-200 dark:border-lp-darkBorder fade-in';
+    let selectedEmoji = EMOJIS[Math.floor(Math.random() * EMOJIS.length)];
+    let selectedColor = WS_COLORS[Math.floor(Math.random() * WS_COLORS.length)];
+    content.innerHTML = `
+    <div class="p-6">
+        <h2 class="text-lg font-bold dark:text-white mb-4">Create Workspace</h2>
+        <div class="space-y-4">
+            <div class="flex items-center gap-3">
+                <button id="wsEmojiBtn" class="text-3xl hover:bg-gray-100 dark:hover:bg-lp-darkBorder rounded-lg p-2 transition-colors emoji-btn">${selectedEmoji}</button>
+                <input id="wsNameInput" type="text" placeholder="Workspace name" class="flex-1 bg-gray-100 dark:bg-lp-darkBg rounded-lg px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-lp-purple/30 dark:text-lp-darkText" autofocus>
+            </div>
+            <div>
+                <label class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 block">Color</label>
+                <div class="flex gap-2 flex-wrap">${WS_COLORS.map(c => `<button class="workspace-color ${c === selectedColor ? 'selected' : ''}" style="background:${c}" data-color="${c}"></button>`).join('')}</div>
+            </div>
+            <div>
+                <label class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 block">Emoji</label>
+                <div class="flex gap-1 flex-wrap">${EMOJIS.slice(0, 20).map(e => `<button class="w-8 h-8 flex items-center justify-center rounded hover:bg-gray-100 dark:hover:bg-lp-darkBorder text-lg ws-emoji-btn ${e === selectedEmoji ? 'bg-lp-purple/10' : ''}">${e}</button>`).join('')}</div>
+            </div>
+            <button id="createWSSubmit" class="w-full bg-lp-purple hover:bg-indigo-600 text-white rounded-lg py-3 font-medium transition-colors">Create Workspace</button>
+        </div>
+    </div>`;
+    overlay.classList.remove('hidden');
+    overlay.onclick = (e) => { if (e.target === overlay) overlay.classList.add('hidden'); };
+    content.querySelectorAll('.workspace-color').forEach(btn => { btn.onclick = () => { content.querySelectorAll('.workspace-color').forEach(b => b.classList.remove('selected')); btn.classList.add('selected'); selectedColor = btn.dataset.color; }; });
+    content.querySelectorAll('.ws-emoji-btn').forEach(btn => { btn.onclick = () => { selectedEmoji = btn.textContent.trim(); document.getElementById('wsEmojiBtn').textContent = selectedEmoji; content.querySelectorAll('.ws-emoji-btn').forEach(b => b.classList.remove('bg-lp-purple/10')); btn.classList.add('bg-lp-purple/10'); }; });
+    document.getElementById('createWSSubmit').onclick = () => {
+        const name = document.getElementById('wsNameInput').value.trim();
+        if (!name) return;
+        const ws = { id: state.uid(), name, emoji: selectedEmoji, color: selectedColor, isFavorite: false, createdAt: Date.now(), pages: [] };
+        state.workspaces.push(ws);
+        state.addActivity(`Created workspace "${name}"`, 'fa-folder-plus');
+        state.addNotification(`Workspace "${name}" created!`, 'fa-folder-plus');
+        state.save();
+        overlay.classList.add('hidden');
+        navigateWorkspace(ws.id);
+    };
+}
+
+function showCreatePageModal(wsId) {
+    const overlay = document.getElementById('modalOverlay');
+    const content = document.getElementById('modalContent');
+    content.className = 'bg-white dark:bg-lp-darkCard rounded-xl shadow-2xl max-h-[90vh] overflow-auto w-full max-w-md border border-gray-200 dark:border-lp-darkBorder fade-in';
+    content.innerHTML = `
+    <div class="p-6">
+        <h2 class="text-lg font-bold dark:text-white mb-4">Create Page</h2>
+        <div class="space-y-4">
+            <input id="pgNameInput" type="text" placeholder="Page name" class="w-full bg-gray-100 dark:bg-lp-darkBg rounded-lg px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-lp-purple/30 dark:text-lp-darkText" autofocus>
+            <div>
+                <label class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 block">Page Type</label>
+                <div class="grid grid-cols-2 gap-3">
+                    <button class="page-type-btn bg-gray-50 dark:bg-lp-darkBg border-2 border-lp-purple rounded-xl p-4 text-left" data-type="document">
+                        <i class="fas fa-file-alt text-lp-purple text-lg mb-2"></i>
+                        <div class="font-semibold text-sm dark:text-white">Document</div>
+                        <div class="text-xs text-gray-400">Rich text with blocks</div>
+                    </button>
+                    <button class="page-type-btn bg-gray-50 dark:bg-lp-darkBg border-2 border-transparent rounded-xl p-4 text-left hover:border-gray-300" data-type="board">
+                        <i class="fas fa-columns text-blue-500 text-lg mb-2"></i>
+                        <div class="font-semibold text-sm dark:text-white">Board</div>
+                        <div class="text-xs text-gray-400">Kanban board</div>
+                    </button>
+                </div>
+            </div>
+            <button id="createPgSubmit" class="w-full bg-lp-purple hover:bg-indigo-600 text-white rounded-lg py-3 font-medium transition-colors">Create Page</button>
+        </div>
+    </div>`;
+    overlay.classList.remove('hidden');
+    overlay.onclick = (e) => { if (e.target === overlay) overlay.classList.add('hidden'); };
+    let selectedType = 'document';
+    content.querySelectorAll('.page-type-btn').forEach(btn => {
+        btn.onclick = () => { selectedType = btn.dataset.type; content.querySelectorAll('.page-type-btn').forEach(b => { b.classList.remove('border-lp-purple'); b.classList.add('border-transparent'); }); btn.classList.add('border-lp-purple'); btn.classList.remove('border-transparent'); };
+    });
+    document.getElementById('createPgSubmit').onclick = () => {
+        const name = document.getElementById('pgNameInput').value.trim() || 'Untitled';
+        const ws = state.getWorkspace(wsId);
+        if (!ws) return;
+        const page = { id: state.uid(), name, emoji: selectedType === 'board' ? '📋' : '📄', type: selectedType, isFavorite: false, createdAt: Date.now(), updatedAt: Date.now(), cover: '', tags: [], reactions: {}, comments: [], locked: false };
+        if (selectedType === 'document') { page.blocks = [{ id: state.uid(), type: 'heading1', content: name }]; }
+        else { page.board = { lists: [{ id: state.uid(), title: 'To Do', cards: [], wipLimit: 0 }, { id: state.uid(), title: 'In Progress', cards: [], wipLimit: 0 }, { id: state.uid(), title: 'Done', cards: [], wipLimit: 0 }] }; }
+        ws.pages.push(page);
+        state.addActivity(`Created page "${name}"`, 'fa-file-plus');
+        state.save();
+        overlay.classList.add('hidden');
+        navigatePage(wsId, page.id);
+    };
+}
+
+function showCreatePageQuick(type) {
+    if (state.workspaces.length === 0) { showCreateModal(); return; }
+    if (state.workspaces.length === 1) { showCreatePageModal(state.workspaces[0].id); return; }
+    const overlay = document.getElementById('modalOverlay');
+    const content = document.getElementById('modalContent');
+    content.className = 'bg-white dark:bg-lp-darkCard rounded-xl shadow-2xl max-h-[85vh] overflow-auto w-full max-w-sm border border-gray-200 dark:border-lp-darkBorder fade-in';
+    content.innerHTML = `<div class="p-6"><h2 class="text-lg font-bold dark:text-white mb-4">Choose Workspace</h2><div class="space-y-2">${state.workspaces.map(ws => `<div class="flex items-center gap-3 p-3 rounded-lg border border-gray-200 dark:border-lp-darkBorder hover:border-lp-purple hover:bg-lp-purple/5 cursor-pointer transition-all ws-pick" data-ws="${ws.id}"><span class="text-xl">${ws.emoji}</span><span class="font-medium text-sm dark:text-white">${ws.name}</span></div>`).join('')}</div></div>`;
+    overlay.classList.remove('hidden');
+    overlay.onclick = (e) => { if (e.target === overlay) overlay.classList.add('hidden'); };
+    content.querySelectorAll('.ws-pick').forEach(el => { el.onclick = () => { overlay.classList.add('hidden'); showCreatePageModal(el.dataset.ws); }; });
+}
+
+// =====================================================================
+// TEMPLATE MODAL
+// =====================================================================
+function showTemplateModal() {
+    if (state.workspaces.length === 0) { showCreateModal(); return; }
+    const overlay = document.getElementById('modalOverlay');
+    const content = document.getElementById('modalContent');
+    content.className = 'bg-white dark:bg-lp-darkCard rounded-xl shadow-2xl max-h-[90vh] overflow-auto w-full max-w-xl border border-gray-200 dark:border-lp-darkBorder fade-in';
+    content.innerHTML = `
+    <div class="p-6">
+        <h2 class="text-lg font-bold dark:text-white mb-1">Start from Template</h2>
+        <p class="text-sm text-gray-400 mb-4">Choose a template to get started quickly</p>
+        <div class="grid grid-cols-2 gap-3">${TEMPLATES.map((t, i) => `
+            <button class="text-left p-4 rounded-xl border border-gray-200 dark:border-lp-darkBorder hover:border-lp-purple hover:shadow-sm transition-all group" onclick="createFromTemplate(${i})">
+                <span class="text-2xl mb-2 block">${t.emoji}</span>
+                <div class="font-semibold text-sm dark:text-white">${t.name}</div>
+                <div class="text-xs text-gray-400 mt-0.5">${t.desc}</div>
+            </button>
+        `).join('')}</div>
+    </div>`;
+    overlay.classList.remove('hidden');
+    overlay.onclick = (e) => { if (e.target === overlay) overlay.classList.add('hidden'); };
+}
+
+function createFromTemplate(templateIdx) {
+    const template = TEMPLATES[templateIdx];
+    if (!template) return;
+    document.getElementById('modalOverlay').classList.add('hidden');
+    if (state.workspaces.length === 1) { applyTemplate(state.workspaces[0].id, template); return; }
+    const overlay = document.getElementById('modalOverlay');
+    const content = document.getElementById('modalContent');
+    content.className = 'bg-white dark:bg-lp-darkCard rounded-xl shadow-2xl max-h-[85vh] overflow-auto w-full max-w-sm border border-gray-200 dark:border-lp-darkBorder fade-in';
+    content.innerHTML = `<div class="p-6"><h2 class="text-lg font-bold dark:text-white mb-4">Choose Workspace</h2><div class="space-y-2">${state.workspaces.map(ws => `<div class="flex items-center gap-3 p-3 rounded-lg border border-gray-200 dark:border-lp-darkBorder hover:border-lp-purple hover:bg-lp-purple/5 cursor-pointer transition-all ws-tpl-pick" data-ws="${ws.id}"><span class="text-xl">${ws.emoji}</span><span class="font-medium text-sm dark:text-white">${ws.name}</span></div>`).join('')}</div></div>`;
+    overlay.classList.remove('hidden');
+    content.querySelectorAll('.ws-tpl-pick').forEach(el => { el.onclick = () => { overlay.classList.add('hidden'); applyTemplate(el.dataset.ws, template); }; });
+}
+
+function applyTemplate(wsId, template) {
+    const ws = state.getWorkspace(wsId);
+    if (!ws) return;
+    const blocks = JSON.parse(JSON.stringify(template.blocks)).map(b => ({ ...b, id: state.uid() }));
+    const page = { id: state.uid(), name: template.name, emoji: template.emoji, type: 'document', isFavorite: false, createdAt: Date.now(), updatedAt: Date.now(), cover: '', tags: [], reactions: {}, comments: [], locked: false, blocks };
+    ws.pages.push(page);
+    state.addActivity(`Created "${template.name}" from template`, 'fa-magic');
+    state.save();
+    navigatePage(wsId, page.id);
+}
+
+// =====================================================================
+// AI DRAFT MODAL
+// =====================================================================
+function showAIDraftModal() {
+    const overlay = document.getElementById('modalOverlay');
+    const content = document.getElementById('modalContent');
+    content.className = 'bg-white dark:bg-lp-darkCard rounded-xl shadow-2xl max-h-[90vh] overflow-auto w-full max-w-md border border-gray-200 dark:border-lp-darkBorder fade-in';
+    content.innerHTML = `
+    <div class="p-6">
+        <div class="flex items-center gap-3 mb-4">
+            <div class="w-10 h-10 bg-lp-purple/10 rounded-xl flex items-center justify-center"><i class="fas fa-robot text-lp-purple"></i></div>
+            <div><h2 class="text-lg font-bold dark:text-white">AI Draft</h2><p class="text-xs text-gray-400">Generate content with AI</p></div>
+        </div>
+        <div class="space-y-4">
+            <div>
+                <label class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5 block">What would you like to create?</label>
+                <textarea id="aiPromptInput" rows="4" placeholder="e.g., Write a project plan for a mobile app launch..." class="w-full bg-gray-100 dark:bg-lp-darkBg rounded-lg p-3 text-sm outline-none resize-none focus:ring-2 focus:ring-lp-purple/30 dark:text-lp-darkText"></textarea>
+            </div>
+            <div>
+                <label class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5 block">Style</label>
+                <div class="flex gap-2 flex-wrap">
+                    <button class="ai-style-btn tag bg-lp-purple/10 text-lp-purple border border-lp-purple" data-style="professional">Professional</button>
+                    <button class="ai-style-btn tag bg-gray-100 text-gray-600 border border-transparent" data-style="casual">Casual</button>
+                    <button class="ai-style-btn tag bg-gray-100 text-gray-600 border border-transparent" data-style="creative">Creative</button>
+                    <button class="ai-style-btn tag bg-gray-100 text-gray-600 border border-transparent" data-style="concise">Concise</button>
+                </div>
+            </div>
+            <button id="aiGenerateBtn" class="w-full bg-lp-purple hover:bg-indigo-600 text-white rounded-lg py-3 font-medium transition-colors flex items-center justify-center gap-2"><i class="fas fa-magic"></i>Generate</button>
+            <div id="aiResult" class="hidden"></div>
+        </div>
+    </div>`;
+    overlay.classList.remove('hidden');
+    overlay.onclick = (e) => { if (e.target === overlay) overlay.classList.add('hidden'); };
+    let selectedStyle = 'professional';
+    content.querySelectorAll('.ai-style-btn').forEach(btn => {
+        btn.onclick = () => { selectedStyle = btn.dataset.style; content.querySelectorAll('.ai-style-btn').forEach(b => { b.className = 'ai-style-btn tag bg-gray-100 text-gray-600 border border-transparent'; }); btn.className = 'ai-style-btn tag bg-lp-purple/10 text-lp-purple border border-lp-purple'; };
+    });
+    document.getElementById('aiGenerateBtn').onclick = async () => {
+        const prompt = document.getElementById('aiPromptInput').value.trim();
+        if (!prompt) return;
+        const btn = document.getElementById('aiGenerateBtn');
+        btn.innerHTML = '<div class="ai-typing mr-2"></div>Generating...';
+        btn.disabled = true;
+        try {
+            if (typeof window.call_llm === 'function') {
+                const result = await window.call_llm({ prompt: `Generate content in a ${selectedStyle} style: ${prompt}. Return plain text paragraphs.` });
+                insertAIContent(result);
+            } else {
+                // Simulate AI response
+                setTimeout(() => {
+                    const simulated = `# ${prompt}\n\nThis is AI-generated content based on your prompt. In a connected environment, this would use the AI model to generate rich, contextual content.\n\n## Key Points\n\n- Point 1: Important consideration\n- Point 2: Strategic approach\n- Point 3: Implementation details\n\n## Next Steps\n\n1. Review the generated content\n2. Customize as needed\n3. Share with your team`;
+                    insertAIContent(simulated);
+                }, 1500);
+            }
+        } catch(e) { btn.innerHTML = '<i class="fas fa-magic"></i>Generate'; btn.disabled = false; }
+    };
+}
+
+function insertAIContent(text) {
+    const page = state.getPage(state.currentWorkspace, state.currentPage);
+    if (!page || page.type !== 'document') { document.getElementById('modalOverlay').classList.add('hidden'); return; }
+    const lines = text.split('\n').filter(l => l.trim());
+    lines.forEach(line => {
+        let block;
+        if (line.startsWith('# ')) block = { id: state.uid(), type: 'heading1', content: line.slice(2) };
+        else if (line.startsWith('## ')) block = { id: state.uid(), type: 'heading2', content: line.slice(3) };
+        else if (line.startsWith('### ')) block = { id: state.uid(), type: 'heading3', content: line.slice(4) };
+        else if (line.startsWith('- ') || line.startsWith('* ')) {
+            const existing = page.blocks[page.blocks.length - 1];
+            if (existing && existing.type === 'bulletList') { existing.items.push(line.slice(2)); return; }
+            block = { id: state.uid(), type: 'bulletList', items: [line.slice(2)] };
+        }
+        else if (/^\d+\.\s/.test(line)) {
+            const existing = page.blocks[page.blocks.length - 1];
+            if (existing && existing.type === 'numberedList') { existing.items.push(line.replace(/^\d+\.\s/, '')); return; }
+            block = { id: state.uid(), type: 'numberedList', items: [line.replace(/^\d+\.\s/, '')] };
+        }
+        else block = { id: state.uid(), type: 'paragraph', content: line };
+        if (block) page.blocks.push(block);
+    });
+    page.updatedAt = Date.now();
+    state.save();
+    document.getElementById('modalOverlay').classList.add('hidden');
+    state.addActivity('Generated content with AI', 'fa-robot');
+    render();
+}
+
+// =====================================================================
+// SETTINGS & PROFILE MODALS
+// =====================================================================
+function showSettingsModal() {
+    const overlay = document.getElementById('modalOverlay');
+    const content = document.getElementById('modalContent');
+    content.className = 'bg-white dark:bg-lp-darkCard rounded-xl shadow-2xl max-h-[90vh] overflow-auto w-full max-w-md border border-gray-200 dark:border-lp-darkBorder fade-in';
+    content.innerHTML = `
+    <div class="p-6">
+        <h2 class="text-lg font-bold dark:text-white mb-4">Settings</h2>
+        <div class="space-y-4">
+            <div class="flex items-center justify-between p-3 bg-gray-50 dark:bg-lp-darkBg rounded-lg">
+                <div class="flex items-center gap-3"><i class="fas fa-moon text-gray-400"></i><span class="text-sm dark:text-white">Dark Mode</span></div>
+                <button onclick="toggleDarkMode();showSettingsModal()" class="w-10 h-6 rounded-full ${state.darkMode ? 'bg-lp-purple' : 'bg-gray-300'} relative transition-colors"><div class="w-4 h-4 bg-white rounded-full absolute top-1 transition-all ${state.darkMode ? 'right-1' : 'left-1'}"></div></button>
+            </div>
+            <div class="flex items-center justify-between p-3 bg-gray-50 dark:bg-lp-darkBg rounded-lg cursor-pointer" onclick="document.getElementById('modalOverlay').classList.add('hidden');document.getElementById('shortcutsModal').classList.remove('hidden')">
+                <div class="flex items-center gap-3"><i class="fas fa-keyboard text-gray-400"></i><span class="text-sm dark:text-white">Keyboard Shortcuts</span></div>
+                <i class="fas fa-chevron-right text-gray-400 text-xs"></i>
+            </div>
+            <div class="flex items-center justify-between p-3 bg-gray-50 dark:bg-lp-darkBg rounded-lg cursor-pointer" onclick="state.exportData();document.getElementById('modalOverlay').classList.add('hidden')">
+                <div class="flex items-center gap-3"><i class="fas fa-download text-gray-400"></i><span class="text-sm dark:text-white">Export All Data</span></div>
+                <i class="fas fa-chevron-right text-gray-400 text-xs"></i>
+            </div>
+            <div class="flex items-center justify-between p-3 bg-gray-50 dark:bg-lp-darkBg rounded-lg cursor-pointer" onclick="document.getElementById('modalOverlay').classList.add('hidden');importData()">
+                <div class="flex items-center gap-3"><i class="fas fa-upload text-gray-400"></i><span class="text-sm dark:text-white">Import Data</span></div>
+                <i class="fas fa-chevron-right text-gray-400 text-xs"></i>
+            </div>
+            <div class="text-center pt-2">
+                <p class="text-xs text-gray-400">Infinite v1.0 — Built with ❤️</p>
+            </div>
+        </div>
+    </div>`;
+    overlay.classList.remove('hidden');
+    overlay.onclick = (e) => { if (e.target === overlay) overlay.classList.add('hidden'); };
+}
+
+function showProfileModal() {
+    const overlay = document.getElementById('modalOverlay');
+    const content = document.getElementById('modalContent');
+    content.className = 'bg-white dark:bg-lp-darkCard rounded-xl shadow-2xl max-h-[90vh] overflow-auto w-full max-w-sm border border-gray-200 dark:border-lp-darkBorder fade-in';
+    content.innerHTML = `
+    <div class="p-6 text-center">
+        <div class="w-16 h-16 bg-lp-purple rounded-full flex items-center justify-center text-white text-xl font-bold mx-auto mb-3">${state.profile.initials}</div>
+        <input type="text" value="${state.profile.name}" class="text-lg font-bold text-center w-full outline-none bg-transparent dark:text-white mb-1" onchange="state.profile.name=this.value;state.profile.initials=this.value.split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2);state.save()">
+        <p class="text-xs text-gray-400 mb-4">Click name to edit</p>
+        <button onclick="document.getElementById('modalOverlay').classList.add('hidden')" class="bg-lp-purple hover:bg-indigo-600 text-white rounded-lg py-2 px-6 text-sm font-medium transition-colors">Done</button>
+    </div>`;
+    overlay.classList.remove('hidden');
+    overlay.onclick = (e) => { if (e.target === overlay) overlay.classList.add('hidden'); };
+}
+
+// =====================================================================
+// IMPORT DATA
+// =====================================================================
+function importData() {
+    const input = document.getElementById('importFileInput');
+    input.onchange = (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+            try {
+                const data = JSON.parse(ev.target.result);
+                if (data.workspaces) { state.workspaces = data.workspaces; }
+                if (data.trash) { state.trash = data.trash; }
+                if (data.profile) { state.profile = data.profile; }
+                state.save();
+                state.addNotification('Data imported successfully!', 'fa-upload');
+                render();
+            } catch(err) { alert('Invalid file format.'); }
+        };
+        reader.readAsText(file);
+        input.value = '';
+    };
+    input.click();
+}
+
+// =====================================================================
+// COMMAND PALETTE (Ctrl+K)
+// =====================================================================
+function showCmdPalette() {
+    document.getElementById('cmdPalette').classList.remove('hidden');
+    document.getElementById('cmdInput').value = '';
+    document.getElementById('cmdInput').focus();
+    renderCmdResults('');
+}
+function hideCmdPalette() { document.getElementById('cmdPalette').classList.add('hidden'); }
+
+function renderCmdResults(query) {
+    const results = document.getElementById('cmdResults');
+    const q = query.toLowerCase().trim();
+    let items = [];
+    // Pages
+    state.getAllPages().forEach(p => { if (!q || p.name.toLowerCase().includes(q)) items.push({ type: 'page
