@@ -1,0 +1,265 @@
+/* Board Filters */
+.board-filter-btn {
+    transition: all var(--transition-fast);
+    padding: 6px 10px;
+    border-radius: 8px;
+    border: 1px solid #e5e7eb;
+    font-size: 12px;
+    cursor: pointer;
+}
+
+.board-filter-btn:hover,
+.board-filter-btn.active {
+    background: rgba(98, 100, 167, 0.12);
+    color: var(--primary);
+}
+
+.dark .board-filter-btn {
+    border-color: var(--border-dark);
+}
+
+/* Embed Cards */
+.embed-card {
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    overflow: hidden;
+    transition: box-shadow 0.2s;
+}
+
+.embed-card:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.dark .embed-card {
+    border-color: var(--border-dark);
+}
+
+/* Math Block */
+.math-block {
+    font-family: 'Cambria Math', 'Times New Roman', serif;
+    font-style: italic;
+    background: rgba(98, 100, 167, 0.04);
+    padding: 8px 12px;
+    border-radius: 8px;
+    text-align: center;
+}
+
+/* Mention & Date Tags */
+.mention-tag {
+    color: var(--primary);
+    background: rgba(98, 100, 167, 0.1);
+    padding: 1px 6px;
+    border-radius: 4px;
+    font-weight: 500;
+    cursor: pointer;
+}
+
+.date-tag {
+    color: var(--accent-blue);
+    background: rgba(14, 165, 233, 0.1);
+    padding: 1px 6px;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+/* Vote Buttons */
+.vote-btn {
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    padding: 2px 6px;
+    border-radius: 4px;
+}
+
+.vote-btn:hover {
+    background: rgba(98, 100, 167, 0.1);
+}
+
+/* Workspace Colors */
+.workspace-color {
+    width: 24px;
+    height: 24px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: transform 0.15s;
+}
+
+.workspace-color:hover {
+    transform: scale(1.2);
+}
+
+.workspace-color.selected {
+    outline: 2px solid var(--primary);
+    outline-offset: 2px;
+}
+
+/* Emoji Button */
+.emoji-btn {
+    cursor: pointer;
+    transition: transform 0.15s;
+}
+
+.emoji-btn:hover {
+    transform: scale(1.15);
+}
+
+/* Activity Items */
+.activity-item {
+    border-left: 2px solid #e5e7eb;
+    padding-left: 12px;
+    margin-left: 8px;
+}
+
+.dark .activity-item {
+    border-left-color: var(--border-dark);
+}
+
+/* Context Menu */
+.context-menu {
+    animation: fadeIn 0.15s ease;
+}
+
+/* AI Glow */
+.ai-glow {
+    box-shadow: 0 0 20px rgba(98, 100, 167, 0.3);
+    border: 1px solid rgba(98, 100, 167, 0.3);
+}
+
+.ai-typing {
+    display: inline-block;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--primary);
+    animation: pulse 0.8s ease-in-out infinite;
+}
+
+/* Swimlane Header */
+.swimlane-header {
+    background: rgba(98, 100, 167, 0.05);
+    border-radius: 8px;
+    padding: 8px 12px;
+    margin-bottom: 8px;
+}
+
+/* Version Item */
+.version-item {
+    transition: all var(--transition-fast);
+}
+
+.version-item:hover {
+    background: rgba(98, 100, 167, 0.06);
+}
+
+/* Card Cover */
+.card-cover {
+    height: 100px;
+    border-radius: 8px 8px 0 0;
+    object-fit: cover;
+    width: 100%;
+}
+
+/* Page Cover */
+.cover-img {
+    height: 180px;
+    object-fit: cover;
+    width: 100%;
+    border-radius: 12px 12px 0 0;
+}
+
+/* Cover Gradients */
+.cover-gradient {
+    background: linear-gradient(135deg, #6264A7 0%, #4F6BED 50%, #0EA5E9 100%);
+}
+
+.cover-gradient-warm {
+    background: linear-gradient(135deg, #F59E0B 0%, #EF4444 50%, #EC4899 100%);
+}
+
+.cover-gradient-green {
+    background: linear-gradient(135deg, #22C55E 0%, #0EA5E9 100%);
+}
+
+.cover-gradient-dark {
+    background: linear-gradient(135deg, #1E1E1E 0%, #6264A7 100%);
+}
+
+.cover-gradient-sunset {
+    background: linear-gradient(135deg, #F97316 0%, #EC4899 50%, #8B5CF6 100%);
+}
+
+/* Keyboard Badge */
+.kbd {
+    font-size: 11px;
+    padding: 1px 5px;
+    border-radius: 4px;
+    background: #f3f4f6;
+    border: 1px solid #e5e7eb;
+    font-family: monospace;
+    color: #6b7280;
+}
+
+.dark .kbd {
+    background: var(--border-dark);
+    border-color: #555;
+    color: #aaa;
+}
+
+/* Notification Panel */
+.notif-panel {
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+/* Board Search */
+#boardSearchInput {
+    width: 144px;
+}
+
+/* Page Type Buttons */
+.page-type-btn {
+    transition: all var(--transition-fast);
+}
+
+.page-type-btn:hover {
+    border-color: #d1d5db;
+}
+
+/* Workspace Tree */
+.ws-tree-item {
+    transition: all var(--transition-fast);
+}
+
+.ws-tree-item:hover {
+    background: rgba(98, 100, 167, 0.06);
+}
+
+/* Toggle Button (Dark Mode) */
+.toggle-switch {
+    position: relative;
+    width: 40px;
+    height: 24px;
+    background: #ccc;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: background 0.3s;
+}
+
+.toggle-switch.active {
+    background: var(--primary);
+}
+
+.toggle-switch::after {
+    content: '';
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    background: white;
+    border-radius: 50%;
+    top: 2px;
+    left: 2px;
+    transition: left 0.3s;
+}
+
+.toggle-switch.active::after {
+    left: 18px;
+}
