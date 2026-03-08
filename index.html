@@ -1804,9 +1804,109 @@ function renderCmdResults(query) {
     const results = document.getElementById('cmdResults');
     const q = query.toLowerCase().trim();
     let items = [];
+    
     // Pages
-    state.getAllPages().forEach(p => { if (!q || p.name.toLowerCase().includes(q)) items.push({ type: 'page
+    state.getAllPages().forEach(p => {
+        if (!q || p.name.toLowerCase().includes(q)) {
+            items.push({
+                type: 'page',
+                title: `${p.emoji} ${p.name}`,
+                subtitle: `${p.workspaceEmoji} ${p.workspaceName}`,
+                action: () => { navigatePage(p.workspaceId, p.id); hideCmdPalette(); }
+            });
+        }
+    });
+    
+    // Workspaces
+    state.workspaces.forEach(w => {
+        if (!q || w.name.toLowerCase().includes(q)) {
+            items.push({
+                type: 'workspace',
+                title: `${w.emoji} ${w.name}`,
+                subtitle: `${w.pages.length} pages`,
+                action: () => { navigateWorkspace(w.id); hideCmdPalette(); }
+            });
+        }
+    });
+    
+    // Commands
+    const commands = [
+        { title: '+ New Page', subtitle: 'Create a new document', action: () => { showCreatePageQuick('document'); hideCmdPalette(); } },
+        { title: '+ New Board', subtitle: 'Create a Kanban board', action: () => { showCreatePageQuick('board'); hideCmdPalette(); } },
+        { title: '+ New Workspace', subtitle: 'Create a new workspace', action: () => { showCreateModal(); hideCmdPalette(); } },
+        { title: '🏠 Home', subtitle: 'Go to home view', action: () => { state.currentView = 'home'; state.currentWorkspace = null; state.currentPage = null; render(); hideCmdPalette(); } },
+        { title: '⭐ Favorites', subtitle: 'View your favorites', action: () => { state.currentView = 'favorites'; render(); hideCmdPalette(); } },
+        { title: '🕐 Recent', subtitle: 'View recent pages', action: () => { state.currentView = 'recent'; render(); hideCmdPalette(); } },
+        { title: '⚡ Activity', subtitle: 'View activity log', action: () => { state.currentView = 'activity'; render(); hideCmdPalette(); } },
+        { title: '🗑️ Trash', subtitle: 'View deleted items', action: () => { state.currentView = 'trash'; render(); hideCmdPalette(); } },
+        { title: '🌙 Dark Mode', subtitle: 'Toggle dark theme', action: () => { toggleDarkMode(); hideCmdPalette(); } },
+        { title: '⌨️ Shortcuts', subtitle: 'View keyboard shortcuts', action: () => { document.getElementById('shortcutsModal').classList.remove('hidden'); hideCmdPalette(); } }
+    ];
+    
+    if (q) {
+        items = items.concat(commands.filter(c => c.title.toLowerCase().includes(q) || c.subtitle.toLowerCase().includes(q)));
+    } else {
+        items = items.concat(commands);
+    }
+    
+    results.innerHTML = items.length ? `<div class="p-2 space-y-0.5">${items.map((item, i) => `
+        <div class="cmd-palette-item flex items-center gap-3 px-3 py-2 rounded-lg cursor-pointer hover:bg-gray-100 dark:hover:bg-lp-darkBorder" data-index="${i}">
+            <div class="flex-1 min-w-0">
+                <div class="text-sm font-medium dark:text-white truncate">${item.title}</div>
+                <div class="text-xs text-gray-400 truncate">${item.subtitle}</div>
+            </div>
+        </div>
+    `).join('')}</div>` : '<p class="text-sm text-gray-400 px-3 py-2">No results found</p>';
+    
+    results.querySelectorAll('.cmd-palette-item').forEach((el, i) => {
+        el.addEventListener('click', () => { items[i].action(); });
+    });
+}
+
+// Navigation Helpers
+function navigateWorkspace(wsId) {
+    state.currentView = 'workspace';
+    state.currentWorkspace = wsId;
+    state.currentPage = null;
+    render();
+}
+
+function navigatePage(wsId, pgId) {
+    state.currentView = 'page';
+    state.currentWorkspace = wsId;
+    state.currentPage = pgId;
+    render();
+}
+
+// Keyboard Events
+document.addEventListener('keydown', (e) => {
+    if ((e.ctrlKey || e.metaKey) && e.key === 'k') { e.preventDefault(); showCmdPalette(); }
+    else if ((e.ctrlKey || e.metaKey) && e.key === 'n') { e.preventDefault(); showCreatePageQuick('document'); }
+    else if ((e.ctrlKey || e.metaKey) && e.key === '\\') { e.preventDefault(); document.getElementById('sidebar').classList.toggle('hidden'); document.getElementById('sidebarCollapsed').classList.toggle('hidden'); }
+    else if ((e.ctrlKey || e.metaKey) && e.key === 'd') { e.preventDefault(); toggleDarkMode(); }
+    else if ((e.ctrlKey || e.metaKey) && e.key === 's') { e.preventDefault(); state.save(); state.addNotification('Saved!', 'fa-check'); }
+    else if ((e.ctrlKey || e.metaKey) && e.key === '/') { e.preventDefault(); document.getElementById('shortcutsModal').classList.remove('hidden'); }
+    else if (e.key === 'Escape' && !document.getElementById('cmdPalette').classList.contains('hidden')) { hideCmdPalette(); }
 });
+
+document.getElementById('cmdInput').addEventListener('input', (e) => { renderCmdResults(e.target.value); });
+document.getElementById('cmdPalette').addEventListener('click', (e) => { if (e.target === document.getElementById('cmdPalette')) hideCmdPalette(); });
+
+// Utility Functions
+function timeAgo(timestamp) {
+    if (!timestamp) return 'Never';
+    const secs = Math.floor((Date.now() - timestamp) / 1000);
+    if (secs < 60) return secs + 's ago';
+    if (secs < 3600) return Math.floor(secs / 60) + 'm ago';
+    if (secs < 86400) return Math.floor(secs / 3600) + 'h ago';
+    if (secs < 604800) return Math.floor(secs / 86400) + 'd ago';
+    const date = new Date(timestamp);
+    return date.toLocaleDateString();
+}
+
+function isOverdue(dueDate) {
+    if (!dueDate) return false;
+    return new Date(dueDate) < new Date() && new Date(dueDate).toDateString() !== new Date().toDateString();
 }
 
 // Initialize on page load
